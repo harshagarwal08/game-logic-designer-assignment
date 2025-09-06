@@ -15,6 +15,7 @@ import ReactFlow, {
   ReactFlowInstance,
   ConnectionMode,
   NodeMouseHandler,
+  useKeyPress,
 } from 'reactflow'
 import 'reactflow/dist/style.css'
 import { nodeTypes } from './nodes'
@@ -33,6 +34,26 @@ export default function FlowCanvas({ onNodeAdd, onNodeSelect, onNodeUpdate }: Fl
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes)
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges)
   const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null)
+  const [selectedNodes, setSelectedNodes] = useState<Node[]>([])
+  const [selectedEdges, setSelectedEdges] = useState<Edge[]>([])
+
+  const deleteKeyPressed = useKeyPress('Delete')
+  const backspaceKeyPressed = useKeyPress('Backspace')
+
+  // Handle delete key press
+  React.useEffect(() => {
+    if (deleteKeyPressed || backspaceKeyPressed) {
+      if (selectedNodes.length > 0) {
+        setNodes((nds) => nds.filter((node) => !selectedNodes.find((selected) => selected.id === node.id)))
+        setSelectedNodes([])
+        onNodeSelect?.(null)
+      }
+      if (selectedEdges.length > 0) {
+        setEdges((eds) => eds.filter((edge) => !selectedEdges.find((selected) => selected.id === edge.id)))
+        setSelectedEdges([])
+      }
+    }
+  }, [deleteKeyPressed, backspaceKeyPressed, selectedNodes, selectedEdges, setNodes, setEdges, onNodeSelect])
 
   const onConnect = useCallback(
     (params: Connection) => {
@@ -95,6 +116,18 @@ export default function FlowCanvas({ onNodeAdd, onNodeSelect, onNodeUpdate }: Fl
     onNodeSelect?.(null)
   }, [onNodeSelect])
 
+  const onSelectionChange = useCallback(({ nodes: selectedNodes, edges: selectedEdges }: { nodes: Node[], edges: Edge[] }) => {
+    setSelectedNodes(selectedNodes)
+    setSelectedEdges(selectedEdges)
+    
+    // If a single node is selected, show its details
+    if (selectedNodes.length === 1) {
+      onNodeSelect?.(selectedNodes[0])
+    } else if (selectedNodes.length === 0) {
+      onNodeSelect?.(null)
+    }
+  }, [onNodeSelect])
+
   const handleNodeUpdate = useCallback((nodeId: string, properties: Record<string, any>) => {
     setNodes((nds) =>
       nds.map((node) =>
@@ -144,9 +177,12 @@ export default function FlowCanvas({ onNodeAdd, onNodeSelect, onNodeUpdate }: Fl
         onDragOver={onDragOver}
         onNodeClick={onNodeClick}
         onPaneClick={onPaneClick}
+        onSelectionChange={onSelectionChange}
         nodeTypes={nodeTypes}
         connectionMode={ConnectionMode.Loose}
         defaultEdgeOptions={edgeOptions}
+        deleteKeyCode={['Delete', 'Backspace']}
+        multiSelectionKeyCode={['Meta', 'Control']}
         fitView
         attributionPosition="bottom-left"
       >
