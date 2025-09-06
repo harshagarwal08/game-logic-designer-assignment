@@ -2,9 +2,11 @@
 
 import React, { useState } from 'react'
 import { FlowCanvasWithProvider } from './FlowCanvas'
+import BlockDetailsPanel from './BlockDetailsPanel'
+import { Node } from 'reactflow'
 
 export default function GameFlowDesigner() {
-  const [selectedNode, setSelectedNode] = useState<any>(null)
+  const [selectedNode, setSelectedNode] = useState<Node | null>(null)
 
   const onDragStart = (event: React.DragEvent, nodeType: string) => {
     event.dataTransfer.setData('application/reactflow', nodeType)
@@ -13,6 +15,14 @@ export default function GameFlowDesigner() {
 
   const onNodeAdd = (nodeType: string) => {
     console.log(`Added ${nodeType} node`)
+  }
+
+  const onNodeSelect = (node: Node | null) => {
+    setSelectedNode(node)
+  }
+
+  const onNodeUpdate = (nodeId: string, properties: Record<string, any>) => {
+    console.log(`Updated node ${nodeId} with properties:`, properties)
   }
 
   return (
@@ -66,28 +76,22 @@ export default function GameFlowDesigner() {
         </div>
 
         {/* Block Details Panel */}
-        <div className="p-4 flex-1">
+        <div className="p-4 flex-1 overflow-y-auto">
           <h2 className="text-lg font-semibold text-gray-700 mb-3">Block Details</h2>
-          {selectedNode ? (
-            <div className="space-y-2">
-              <div className="text-sm text-gray-600">
-                <strong>Type:</strong> {selectedNode.type}
-              </div>
-              <div className="text-sm text-gray-600">
-                <strong>Label:</strong> {selectedNode.data?.label}
-              </div>
-            </div>
-          ) : (
-            <div className="text-gray-500 text-sm">
-              Click a block to see its details
-            </div>
-          )}
+          <BlockDetailsPanel 
+            selectedNode={selectedNode} 
+            onUpdateNode={onNodeUpdate}
+          />
         </div>
       </div>
 
       {/* Canvas Area */}
       <div className="flex-1 bg-white">
-        <FlowCanvasWithProvider onNodeAdd={onNodeAdd} />
+        <FlowCanvasWithProvider 
+          onNodeAdd={onNodeAdd} 
+          onNodeSelect={onNodeSelect}
+          onNodeUpdate={onNodeUpdate}
+        />
       </div>
     </div>
   )

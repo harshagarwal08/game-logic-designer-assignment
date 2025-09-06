@@ -14,6 +14,7 @@ import ReactFlow, {
   ReactFlowProvider,
   ReactFlowInstance,
   ConnectionMode,
+  NodeMouseHandler,
 } from 'reactflow'
 import 'reactflow/dist/style.css'
 import { nodeTypes } from './nodes'
@@ -24,9 +25,11 @@ const initialEdges: Edge[] = []
 
 interface FlowCanvasProps {
   onNodeAdd?: (nodeType: string) => void
+  onNodeSelect?: (node: Node | null) => void
+  onNodeUpdate?: (nodeId: string, properties: Record<string, any>) => void
 }
 
-export default function FlowCanvas({ onNodeAdd }: FlowCanvasProps) {
+export default function FlowCanvas({ onNodeAdd, onNodeSelect, onNodeUpdate }: FlowCanvasProps) {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes)
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges)
   const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null)
@@ -67,7 +70,10 @@ export default function FlowCanvas({ onNodeAdd }: FlowCanvasProps) {
         id: uuidv4(),
         type,
         position,
-        data: { label: `${type.charAt(0).toUpperCase() + type.slice(1)} Block` },
+        data: { 
+          label: `${type.charAt(0).toUpperCase() + type.slice(1)} Block`,
+          properties: getDefaultProperties(type)
+        },
       }
 
       setNodes((nds) => nds.concat(newNode))
@@ -80,6 +86,42 @@ export default function FlowCanvas({ onNodeAdd }: FlowCanvasProps) {
     event.preventDefault()
     event.dataTransfer.dropEffect = 'move'
   }, [])
+
+  const onNodeClick: NodeMouseHandler = useCallback((event, node) => {
+    onNodeSelect?.(node)
+  }, [onNodeSelect])
+
+  const onPaneClick = useCallback(() => {
+    onNodeSelect?.(null)
+  }, [onNodeSelect])
+
+  const handleNodeUpdate = useCallback((nodeId: string, properties: Record<string, any>) => {
+    setNodes((nds) =>
+      nds.map((node) =>
+        node.id === nodeId
+          ? { ...node, data: { ...node.data, properties } }
+          : node
+      )
+    )
+    onNodeUpdate?.(nodeId, properties)
+  }, [setNodes, onNodeUpdate])
+
+  const getDefaultProperties = (type: string) => {
+    switch (type) {
+      case 'start':
+        return { title: 'Game Start', description: 'Welcome to the adventure!', startingHealth: 100 }
+      case 'choice':
+        return { question: 'What will you do?', optionA: 'Option A', optionB: 'Option B' }
+      case 'enemy':
+        return { name: 'Enemy', health: 50, attack: 10, reward: 25 }
+      case 'treasure':
+        return { name: 'Treasure', value: 10, type: 'gold', rarity: 'common' }
+      case 'end':
+        return { title: 'Game Over', endingType: 'neutral', message: 'Thanks for playing!' }
+      default:
+        return {}
+    }
+  }
 
   const edgeOptions = useMemo(
     () => ({
@@ -100,6 +142,8 @@ export default function FlowCanvas({ onNodeAdd }: FlowCanvasProps) {
         onInit={setReactFlowInstance}
         onDrop={onDrop}
         onDragOver={onDragOver}
+        onNodeClick={onNodeClick}
+        onPaneClick={onPaneClick}
         nodeTypes={nodeTypes}
         connectionMode={ConnectionMode.Loose}
         defaultEdgeOptions={edgeOptions}
@@ -132,10 +176,10 @@ export default function FlowCanvas({ onNodeAdd }: FlowCanvasProps) {
   )
 }
 
-export function FlowCanvasWithProvider({ onNodeAdd }: FlowCanvasProps) {
+export function FlowCanvasWithProvider({ onNodeAdd, onNodeSelect, onNodeUpdate }: FlowCanvasProps) {
   return (
     <ReactFlowProvider>
-      <FlowCanvas onNodeAdd={onNodeAdd} />
+      <FlowCanvas onNodeAdd={onNodeAdd} onNodeSelect={onNodeSelect} onNodeUpdate={onNodeUpdate} />
     </ReactFlowProvider>
   )
 }
