@@ -13,6 +13,7 @@ import ReactFlow, {
   Node,
   ReactFlowProvider,
   ReactFlowInstance,
+  ConnectionMode,
 } from 'reactflow'
 import 'reactflow/dist/style.css'
 import { nodeTypes } from './nodes'
@@ -31,7 +32,16 @@ export default function FlowCanvas({ onNodeAdd }: FlowCanvasProps) {
   const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null)
 
   const onConnect = useCallback(
-    (params: Connection) => setEdges((eds) => addEdge(params, eds)),
+    (params: Connection) => {
+      const newEdge = {
+        ...params,
+        id: uuidv4(),
+        type: 'smoothstep',
+        animated: false,
+        style: { stroke: '#374151', strokeWidth: 2 },
+      }
+      setEdges((eds) => addEdge(newEdge, eds))
+    },
     [setEdges]
   )
 
@@ -71,6 +81,14 @@ export default function FlowCanvas({ onNodeAdd }: FlowCanvasProps) {
     event.dataTransfer.dropEffect = 'move'
   }, [])
 
+  const edgeOptions = useMemo(
+    () => ({
+      animated: false,
+      style: { stroke: '#374151', strokeWidth: 2 },
+    }),
+    []
+  )
+
   return (
     <div className="w-full h-full">
       <ReactFlow
@@ -83,6 +101,8 @@ export default function FlowCanvas({ onNodeAdd }: FlowCanvasProps) {
         onDrop={onDrop}
         onDragOver={onDragOver}
         nodeTypes={nodeTypes}
+        connectionMode={ConnectionMode.Loose}
+        defaultEdgeOptions={edgeOptions}
         fitView
         attributionPosition="bottom-left"
       >
