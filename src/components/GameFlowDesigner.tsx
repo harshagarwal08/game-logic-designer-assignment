@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react'
+import { FlowCanvasWithProvider } from './FlowCanvas'
 
 export default function GameFlowDesigner() {
   return (
@@ -43,10 +44,8 @@ export default function GameFlowDesigner() {
       </div>
 
       {/* Canvas Area */}
-      <div className="flex-1 bg-white relative">
-        <div className="w-full h-full flex items-center justify-center text-gray-400">
-          Canvas Area - React Flow will be implemented here
-        </div>
+      <div className="flex-1 bg-white">
+        <FlowCanvasWithProvider />
       </div>
     </div>
   )
