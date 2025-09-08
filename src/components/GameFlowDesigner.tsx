@@ -7,6 +7,7 @@ import ValidationPanel from './ValidationPanel'
 import SaveLoadPanel from './SaveLoadPanel'
 import UndoRedoPanel from './UndoRedoPanel'
 import ComputationPanel from './ComputationPanel'
+import AIPanel from './AIPanel'
 import { Node, Edge } from 'reactflow'
 import { HistoryManager } from '@/utils/history'
 import { loadFromLocalStorage } from '@/utils/persistence'
@@ -15,7 +16,7 @@ export default function GameFlowDesigner() {
   const [selectedNode, setSelectedNode] = useState<Node | null>(null)
   const [nodes, setNodes] = useState<Node[]>([])
   const [edges, setEdges] = useState<Edge[]>([])
-  const [activeTab, setActiveTab] = useState<'details' | 'validation' | 'save' | 'undo' | 'computation'>('details')
+  const [activeTab, setActiveTab] = useState<'details' | 'validation' | 'save' | 'undo' | 'computation' | 'ai'>('details')
   const [historyManager] = useState(() => new HistoryManager(20))
   const [canUndo, setCanUndo] = useState(false)
   const [canRedo, setCanRedo] = useState(false)
@@ -89,10 +90,21 @@ export default function GameFlowDesigner() {
     }
   }
 
+  const handleAIGenerateFlow = (newNodes: Node[], newEdges: Edge[]) => {
+    setNodes(newNodes)
+    setEdges(newEdges)
+    historyManager.clear()
+    historyManager.saveState(newNodes, newEdges)
+    setCanUndo(historyManager.canUndo())
+    setCanRedo(historyManager.canRedo())
+    setActiveTab('validation') // Switch to validation to show the generated flow
+  }
+
   const tabs = [
     { id: 'details', label: 'Details', icon: '📝' },
     { id: 'validation', label: 'Validation', icon: '✅' },
     { id: 'computation', label: 'Analysis', icon: '📊' },
+    { id: 'ai', label: 'AI', icon: '🤖' },
     { id: 'save', label: 'Save/Load', icon: '💾' },
     { id: 'undo', label: 'History', icon: '↩️' }
   ] as const
@@ -199,6 +211,16 @@ export default function GameFlowDesigner() {
             {activeTab === 'computation' && (
               <div className="panel-content">
                 <ComputationPanel nodes={nodes} edges={edges} />
+              </div>
+            )}
+            
+            {activeTab === 'ai' && (
+              <div className="panel-content">
+                <AIPanel 
+                  nodes={nodes} 
+                  edges={edges} 
+                  onGenerateFlow={handleAIGenerateFlow}
+                />
               </div>
             )}
             
