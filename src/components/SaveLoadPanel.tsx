@@ -2,7 +2,7 @@
 
 import React, { useRef } from 'react'
 import { Node, Edge } from 'reactflow'
-import { saveFlowAsJson, loadFlowFromJson, saveFlowToLocalStorage, loadFlowFromLocalStorage, clearLocalStorage } from '@/utils/persistence'
+import { exportFlowToJSON, importFlowFromJSON, saveToLocalStorage, loadFromLocalStorage, clearLocalStorage } from '@/utils/persistence'
 
 interface SaveLoadPanelProps {
   nodes: Node[]
@@ -15,7 +15,8 @@ export default function SaveLoadPanel({ nodes, edges, onLoadFlow }: SaveLoadPane
 
   const handleExportJson = () => {
     try {
-      saveFlowAsJson(nodes, edges)
+      const jsonString = exportFlowToJSON(nodes, edges)
+      downloadJSON(jsonString, 'game-flow.json')
     } catch (error) {
       console.error('Export failed:', error)
       alert('Export failed. Please try again.')
@@ -32,7 +33,7 @@ export default function SaveLoadPanel({ nodes, edges, onLoadFlow }: SaveLoadPane
       const reader = new FileReader()
       reader.onload = (e) => {
         try {
-          const result = loadFlowFromJson(e.target?.result as string)
+          const result = importFlowFromJSON(e.target?.result as string)
           if (result) {
             onLoadFlow(result.nodes, result.edges)
             alert('Flow imported successfully!')
@@ -50,7 +51,7 @@ export default function SaveLoadPanel({ nodes, edges, onLoadFlow }: SaveLoadPane
 
   const handleSaveToLocalStorage = () => {
     try {
-      saveFlowToLocalStorage(nodes, edges)
+      saveToLocalStorage(nodes, edges)
       alert('Flow saved to browser storage!')
     } catch (error) {
       console.error('Save failed:', error)
@@ -60,7 +61,7 @@ export default function SaveLoadPanel({ nodes, edges, onLoadFlow }: SaveLoadPane
 
   const handleLoadFromLocalStorage = () => {
     try {
-      const savedFlow = loadFlowFromLocalStorage()
+      const savedFlow = loadFromLocalStorage()
       if (savedFlow) {
         onLoadFlow(savedFlow.nodes, savedFlow.edges)
         alert('Flow loaded from browser storage!')
@@ -83,6 +84,20 @@ export default function SaveLoadPanel({ nodes, edges, onLoadFlow }: SaveLoadPane
         alert('Clear failed. Please try again.')
       }
     }
+  }
+
+  const downloadJSON = (jsonString: string, filename: string = 'game-flow.json'): void => {
+    const blob = new Blob([jsonString], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    
+    const link = document.createElement('a')
+    link.href = url
+    link.download = filename
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    
+    URL.revokeObjectURL(url)
   }
 
   return (
