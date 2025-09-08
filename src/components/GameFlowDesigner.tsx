@@ -3,10 +3,13 @@
 import React, { useState } from 'react'
 import { FlowCanvasWithProvider } from './FlowCanvas'
 import BlockDetailsPanel from './BlockDetailsPanel'
-import { Node } from 'reactflow'
+import ValidationPanel from './ValidationPanel'
+import { Node, Edge } from 'reactflow'
 
 export default function GameFlowDesigner() {
   const [selectedNode, setSelectedNode] = useState<Node | null>(null)
+  const [nodes, setNodes] = useState<Node[]>([])
+  const [edges, setEdges] = useState<Edge[]>([])
 
   const onDragStart = (event: React.DragEvent, nodeType: string) => {
     event.dataTransfer.setData('application/reactflow', nodeType)
@@ -23,6 +26,11 @@ export default function GameFlowDesigner() {
 
   const onNodeUpdate = (nodeId: string, properties: Record<string, any>) => {
     console.log(`Updated node ${nodeId} with properties:`, properties)
+  }
+
+  const onFlowChange = (newNodes: Node[], newEdges: Edge[]) => {
+    setNodes(newNodes)
+    setEdges(newEdges)
   }
 
   return (
@@ -75,13 +83,27 @@ export default function GameFlowDesigner() {
           </div>
         </div>
 
-        {/* Block Details Panel */}
-        <div className="p-4 flex-1 overflow-y-auto">
-          <h2 className="text-lg font-semibold text-gray-700 mb-3">Block Details</h2>
-          <BlockDetailsPanel 
-            selectedNode={selectedNode} 
-            onUpdateNode={onNodeUpdate}
-          />
+        {/* Tab Navigation */}
+        <div className="flex border-b border-gray-300">
+          <button className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border-b-2 border-blue-500">
+            Details
+          </button>
+          <button className="flex-1 px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700">
+            Validation
+          </button>
+        </div>
+
+        {/* Panel Content */}
+        <div className="flex-1 overflow-y-auto">
+          <div className="p-4">
+            <BlockDetailsPanel 
+              selectedNode={selectedNode} 
+              onUpdateNode={onNodeUpdate}
+            />
+          </div>
+          <div className="p-4 border-t border-gray-300">
+            <ValidationPanel nodes={nodes} edges={edges} />
+          </div>
         </div>
       </div>
 
@@ -91,6 +113,7 @@ export default function GameFlowDesigner() {
           onNodeAdd={onNodeAdd} 
           onNodeSelect={onNodeSelect}
           onNodeUpdate={onNodeUpdate}
+          onFlowChange={onFlowChange}
         />
       </div>
     </div>

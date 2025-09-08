@@ -28,9 +28,10 @@ interface FlowCanvasProps {
   onNodeAdd?: (nodeType: string) => void
   onNodeSelect?: (node: Node | null) => void
   onNodeUpdate?: (nodeId: string, properties: Record<string, any>) => void
+  onFlowChange?: (nodes: Node[], edges: Edge[]) => void
 }
 
-export default function FlowCanvas({ onNodeAdd, onNodeSelect, onNodeUpdate }: FlowCanvasProps) {
+export default function FlowCanvas({ onNodeAdd, onNodeSelect, onNodeUpdate, onFlowChange }: FlowCanvasProps) {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes)
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges)
   const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null)
@@ -39,6 +40,11 @@ export default function FlowCanvas({ onNodeAdd, onNodeSelect, onNodeUpdate }: Fl
 
   const deleteKeyPressed = useKeyPress('Delete')
   const backspaceKeyPressed = useKeyPress('Backspace')
+
+  // Notify parent of flow changes
+  React.useEffect(() => {
+    onFlowChange?.(nodes, edges)
+  }, [nodes, edges, onFlowChange])
 
   // Handle delete key press
   React.useEffect(() => {
@@ -212,10 +218,10 @@ export default function FlowCanvas({ onNodeAdd, onNodeSelect, onNodeUpdate }: Fl
   )
 }
 
-export function FlowCanvasWithProvider({ onNodeAdd, onNodeSelect, onNodeUpdate }: FlowCanvasProps) {
+export function FlowCanvasWithProvider({ onNodeAdd, onNodeSelect, onNodeUpdate, onFlowChange }: FlowCanvasProps) {
   return (
     <ReactFlowProvider>
-      <FlowCanvas onNodeAdd={onNodeAdd} onNodeSelect={onNodeSelect} onNodeUpdate={onNodeUpdate} />
+      <FlowCanvas onNodeAdd={onNodeAdd} onNodeSelect={onNodeSelect} onNodeUpdate={onNodeUpdate} onFlowChange={onFlowChange} />
     </ReactFlowProvider>
   )
 }
