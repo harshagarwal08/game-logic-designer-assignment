@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useCallback, useMemo, useState } from 'react'
+import React, { useCallback, useMemo, useState, useEffect } from 'react'
 import ReactFlow, {
   Background,
   Controls,
@@ -20,6 +20,8 @@ import ReactFlow, {
 import 'reactflow/dist/style.css'
 import { nodeTypes } from './nodes'
 import { v4 as uuidv4 } from 'uuid'
+import { HistoryManager } from '@/utils/history'
+import { saveToLocalStorage } from '@/utils/persistence'
 
 const initialNodes: Node[] = []
 const initialEdges: Edge[] = []
@@ -29,9 +31,18 @@ interface FlowCanvasProps {
   onNodeSelect?: (node: Node | null) => void
   onNodeUpdate?: (nodeId: string, properties: Record<string, any>) => void
   onFlowChange?: (nodes: Node[], edges: Edge[]) => void
+  historyManager: HistoryManager
+  onHistoryChange?: (canUndo: boolean, canRedo: boolean) => void
 }
 
-export default function FlowCanvas({ onNodeAdd, onNodeSelect, onNodeUpdate, onFlowChange }: FlowCanvasProps) {
+export default function FlowCanvas({ 
+  onNodeAdd, 
+  onNodeSelect, 
+  onNodeUpdate, 
+  onFlowChange, 
+  historyManager,
+  onHistoryChange 
+}: FlowCanvasProps) {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes)
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges)
   const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null)
@@ -40,14 +51,58 @@ export default function FlowCanvas({ onNodeAdd, onNodeSelect, onNodeUpdate, onFl
 
   const deleteKeyPressed = useKeyPress('Delete')
   const backspaceKeyPressed = useKeyPress('Backspace')
+  const ctrlZPressed = useKeyPress('z', { metaKey: true })
+  const ctrlYPressed = useKeyPress('y', { metaKey: true })
+
+  // Autosave to localStorage every 5 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (nodes.length > 0 || edges.length > 0) {
+        saveToLocalStorage(nodes, edges)
+      }
+    }, 5000)
+
+    return () => clearInterval(interval)
+  }, [nodes, edges])
+
+  // Save to history when nodes or edges change
+  useEffect(() => {
+    if (nodes.length > 0 || edges.length > 0) {
+      historyManager.saveState(nodes, edges)
+      onHistoryChange?.(historyManager.canUndo(), historyManager.canRedo())
+    }
+  }, [nodes, edges, historyManager, onHistoryChange])
+
+  // Handle undo/redo keyboard shortcuts
+  useEffect(() => {
+    if (ctrlZPressed) {
+      const state = historyManager.undo()
+      if (state) {
+        setNodes(state.nodes)
+        setEdges(state.edges)
+        onHistoryChange?.(historyManager.canUndo(), historyManager.canRedo())
+      }
+    }
+  }, [ctrlZPressed, historyManager, onHistoryChange])
+
+  useEffect(() => {
+    if (ctrlYPressed) {
+      const state = historyManager.redo()
+      if (state) {
+        setNodes(state.nodes)
+        setEdges(state.edges)
+        onHistoryChange?.(historyManager.canUndo(), historyManager.canRedo())
+      }
+    }
+  }, [ctrlYPressed, historyManager, onHistoryChange])
 
   // Notify parent of flow changes
-  React.useEffect(() => {
+  useEffect(() => {
     onFlowChange?.(nodes, edges)
   }, [nodes, edges, onFlowChange])
 
   // Handle delete key press
-  React.useEffect(() => {
+  useEffect(() => {
     if (deleteKeyPressed || backspaceKeyPressed) {
       if (selectedNodes.length > 0) {
         setNodes((nds) => nds.filter((node) => !selectedNodes.find((selected) => selected.id === node.id)))
@@ -145,6 +200,33 @@ export default function FlowCanvas({ onNodeAdd, onNodeSelect, onNodeUpdate, onFl
     onNodeUpdate?.(nodeId, properties)
   }, [setNodes, onNodeUpdate])
 
+  // Expose methods for external undo/redo
+  const undo = useCallback(() => {
+    const state = historyManager.undo()
+    if (state) {
+      setNodes(state.nodes)
+      setEdges(state.edges)
+      onHistoryChange?.(historyManager.canUndo(), historyManager.canRedo())
+    }
+  }, [historyManager, onHistoryChange])
+
+  const redo = useCallback(() => {
+    const state = historyManager.redo()
+    if (state) {
+      setNodes(state.nodes)
+      setEdges(state.edges)
+      onHistoryChange?.(historyManager.canUndo(), historyManager.canRedo())
+    }
+  }, [historyManager, onHistoryChange])
+
+  const loadFlow = useCallback((newNodes: Node[], newEdges: Edge[]) => {
+    setNodes(newNodes)
+    setEdges(newEdges)
+    historyManager.clear()
+    historyManager.saveState(newNodes, newEdges)
+    onHistoryChange?.(historyManager.canUndo(), historyManager.canRedo())
+  }, [setNodes, setEdges, historyManager, onHistoryChange])
+
   const getDefaultProperties = (type: string) => {
     switch (type) {
       case 'start':
@@ -218,10 +300,24 @@ export default function FlowCanvas({ onNodeAdd, onNodeSelect, onNodeUpdate, onFl
   )
 }
 
-export function FlowCanvasWithProvider({ onNodeAdd, onNodeSelect, onNodeUpdate, onFlowChange }: FlowCanvasProps) {
+export function FlowCanvasWithProvider({ 
+  onNodeAdd, 
+  onNodeSelect, 
+  onNodeUpdate, 
+  onFlowChange, 
+  historyManager,
+  onHistoryChange 
+}: FlowCanvasProps) {
   return (
     <ReactFlowProvider>
-      <FlowCanvas onNodeAdd={onNodeAdd} onNodeSelect={onNodeSelect} onNodeUpdate={onNodeUpdate} onFlowChange={onFlowChange} />
+      <FlowCanvas 
+        onNodeAdd={onNodeAdd} 
+        onNodeSelect={onNodeSelect} 
+        onNodeUpdate={onNodeUpdate} 
+        onFlowChange={onFlowChange}
+        historyManager={historyManager}
+        onHistoryChange={onHistoryChange}
+      />
     </ReactFlowProvider>
   )
 }
