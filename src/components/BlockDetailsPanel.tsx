@@ -65,6 +65,29 @@ export default function BlockDetailsPanel({ selectedNode, onUpdateNode }: BlockD
           max="1000"
         />
       </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Starting Gold</label>
+        <input
+          type="number"
+          value={properties.startingGold || 0}
+          onChange={(e) => handlePropertyChange('startingGold', parseInt(e.target.value))}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+          min="0"
+          max="10000"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Difficulty</label>
+        <select
+          value={properties.difficulty || 'Medium'}
+          onChange={(e) => handlePropertyChange('difficulty', e.target.value)}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+        >
+          <option value="Easy">Easy</option>
+          <option value="Medium">Medium</option>
+          <option value="Hard">Hard</option>
+        </select>
+      </div>
     </div>
   )
 
@@ -91,6 +114,16 @@ export default function BlockDetailsPanel({ selectedNode, onUpdateNode }: BlockD
         />
       </div>
       <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Consequence A</label>
+        <input
+          type="text"
+          value={properties.consequenceA || ''}
+          onChange={(e) => handlePropertyChange('consequenceA', e.target.value)}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="What happens with option A"
+        />
+      </div>
+      <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Option B</label>
         <input
           type="text"
@@ -98,6 +131,16 @@ export default function BlockDetailsPanel({ selectedNode, onUpdateNode }: BlockD
           onChange={(e) => handlePropertyChange('optionB', e.target.value)}
           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           placeholder="Second choice"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Consequence B</label>
+        <input
+          type="text"
+          value={properties.consequenceB || ''}
+          onChange={(e) => handlePropertyChange('consequenceB', e.target.value)}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="What happens with option B"
         />
       </div>
     </div>
@@ -137,6 +180,39 @@ export default function BlockDetailsPanel({ selectedNode, onUpdateNode }: BlockD
           max="100"
         />
       </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Defense</label>
+        <input
+          type="number"
+          value={properties.defense || 5}
+          onChange={(e) => handlePropertyChange('defense', parseInt(e.target.value))}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+          min="0"
+          max="100"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Gold Reward</label>
+        <input
+          type="number"
+          value={properties.reward || 25}
+          onChange={(e) => handlePropertyChange('reward', parseInt(e.target.value))}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+          min="0"
+          max="1000"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Experience Points</label>
+        <input
+          type="number"
+          value={properties.experience || 15}
+          onChange={(e) => handlePropertyChange('experience', parseInt(e.target.value))}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+          min="0"
+          max="1000"
+        />
+      </div>
     </div>
   )
 
@@ -173,7 +249,32 @@ export default function BlockDetailsPanel({ selectedNode, onUpdateNode }: BlockD
           <option value="gold">Gold</option>
           <option value="item">Item</option>
           <option value="experience">Experience</option>
+          <option value="weapon">Weapon</option>
+          <option value="armor">Armor</option>
         </select>
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Rarity</label>
+        <select
+          value={properties.rarity || 'common'}
+          onChange={(e) => handlePropertyChange('rarity', e.target.value)}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
+        >
+          <option value="common">Common</option>
+          <option value="rare">Rare</option>
+          <option value="epic">Epic</option>
+          <option value="legendary">Legendary</option>
+        </select>
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+        <textarea
+          value={properties.description || ''}
+          onChange={(e) => handlePropertyChange('description', e.target.value)}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
+          rows={2}
+          placeholder="A shiny gold coin..."
+        />
       </div>
     </div>
   )
@@ -210,6 +311,17 @@ export default function BlockDetailsPanel({ selectedNode, onUpdateNode }: BlockD
           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
           rows={3}
           placeholder="Thanks for playing!"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Final Score</label>
+        <input
+          type="number"
+          value={properties.finalScore || 0}
+          onChange={(e) => handlePropertyChange('finalScore', parseInt(e.target.value))}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+          min="0"
+          max="10000"
         />
       </div>
     </div>

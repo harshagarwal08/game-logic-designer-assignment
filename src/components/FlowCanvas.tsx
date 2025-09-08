@@ -230,15 +230,45 @@ export default function FlowCanvas({
   const getDefaultProperties = (type: string) => {
     switch (type) {
       case 'start':
-        return { title: 'Game Start', description: 'Welcome to the adventure!', startingHealth: 100 }
+        return { 
+          title: 'Game Start', 
+          description: 'Welcome to the adventure!', 
+          startingHealth: 100,
+          startingGold: 0,
+          difficulty: 'Medium'
+        }
       case 'choice':
-        return { question: 'What will you do?', optionA: 'Option A', optionB: 'Option B' }
+        return { 
+          question: 'What will you do?', 
+          optionA: 'Option A', 
+          optionB: 'Option B',
+          consequenceA: 'Consequence A',
+          consequenceB: 'Consequence B'
+        }
       case 'enemy':
-        return { name: 'Enemy', health: 50, attack: 10, reward: 25 }
+        return { 
+          name: 'Enemy', 
+          health: 50, 
+          attack: 10, 
+          defense: 5,
+          reward: 25,
+          experience: 15
+        }
       case 'treasure':
-        return { name: 'Treasure', value: 10, type: 'gold', rarity: 'common' }
+        return { 
+          name: 'Treasure', 
+          value: 10, 
+          type: 'gold', 
+          rarity: 'common',
+          description: 'A valuable item'
+        }
       case 'end':
-        return { title: 'Game Over', endingType: 'neutral', message: 'Thanks for playing!' }
+        return { 
+          title: 'Game Over', 
+          endingType: 'neutral', 
+          message: 'Thanks for playing!',
+          finalScore: 0
+        }
       default:
         return {}
     }
