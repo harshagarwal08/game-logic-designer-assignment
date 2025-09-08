@@ -12,8 +12,8 @@ interface ValidationPanelProps {
 export default function ValidationPanel({ nodes, edges }: ValidationPanelProps) {
   const validationResults = validateFlow(nodes, edges)
   
-  const errors = validationResults.filter(result => result.type === 'error')
-  const warnings = validationResults.filter(result => result.type === 'warning')
+  const errors = validationResults.errors.filter(result => result.type === 'error')
+  const warnings = validationResults.errors.filter(result => result.type === 'warning')
 
   return (
     <div className="space-y-6">
@@ -23,29 +23,31 @@ export default function ValidationPanel({ nodes, edges }: ValidationPanelProps) 
           <span className="mr-2">✅</span>
           Flow Validation
         </h3>
-        <p className="text-sm text-gray-600">Check your flow for design issues</p>
+        <p className="text-sm text-gray-600">Check your flow for errors and warnings</p>
       </div>
 
-      {/* Summary */}
-      <div className="grid grid-cols-2 gap-4">
-        <div className={`card ${errors.length === 0 ? 'status-success' : 'status-error'}`}>
-          <div className="text-center">
-            <div className="text-2xl font-bold mb-1">
-              {errors.length === 0 ? '✅' : '❌'}
-            </div>
-            <div className="text-sm font-medium">
-              {errors.length} Error{errors.length !== 1 ? 's' : ''}
+      {/* Validation Status */}
+      <div className={`card ${validationResults.isValid ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center">
+            <div className={`w-3 h-3 rounded-full mr-3 ${validationResults.isValid ? 'bg-green-500' : 'bg-red-500'}`}></div>
+            <div>
+              <h4 className={`text-sm font-semibold ${validationResults.isValid ? 'text-green-700' : 'text-red-700'}`}>
+                {validationResults.isValid ? 'Flow is Valid' : 'Flow has Issues'}
+              </h4>
+              <p className={`text-xs ${validationResults.isValid ? 'text-green-600' : 'text-red-600'}`}>
+                {validationResults.isValid 
+                  ? 'Your flow meets all validation requirements' 
+                  : 'Please fix the errors below to make your flow valid'
+                }
+              </p>
             </div>
           </div>
-        </div>
-        <div className={`card ${warnings.length === 0 ? 'status-success' : 'status-warning'}`}>
-          <div className="text-center">
-            <div className="text-2xl font-bold mb-1">
-              {warnings.length === 0 ? '✅' : '⚠️'}
+          <div className="text-right">
+            <div className={`text-lg font-bold ${validationResults.isValid ? 'text-green-600' : 'text-red-600'}`}>
+              {errors.length}
             </div>
-            <div className="text-sm font-medium">
-              {warnings.length} Warning{warnings.length !== 1 ? 's' : ''}
-            </div>
+            <div className="text-xs text-gray-500">Errors</div>
           </div>
         </div>
       </div>
@@ -55,16 +57,20 @@ export default function ValidationPanel({ nodes, edges }: ValidationPanelProps) 
         <div className="card">
           <h4 className="text-sm font-semibold text-red-700 mb-3 flex items-center">
             <span className="mr-2">❌</span>
-            Critical Issues
+            Errors ({errors.length})
           </h4>
           <div className="space-y-2">
             {errors.map((error, index) => (
-              <div key={index} className="p-3 bg-red-50 border border-red-200 rounded-lg">
-                <div className="text-sm font-medium text-red-800 mb-1">
-                  {error.title}
-                </div>
-                <div className="text-xs text-red-600">
-                  {error.message}
+              <div key={index} className="flex items-start p-3 bg-red-50 border border-red-200 rounded-lg">
+                <div className="w-2 h-2 bg-red-500 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                <div className="flex-1">
+                  <p className="text-sm text-red-800 font-medium">{error.message}</p>
+                  {error.nodeId && (
+                    <p className="text-xs text-red-600 mt-1">Node ID: {error.nodeId}</p>
+                  )}
+                  {error.edgeId && (
+                    <p className="text-xs text-red-600 mt-1">Edge ID: {error.edgeId}</p>
+                  )}
                 </div>
               </div>
             ))}
@@ -77,16 +83,20 @@ export default function ValidationPanel({ nodes, edges }: ValidationPanelProps) 
         <div className="card">
           <h4 className="text-sm font-semibold text-yellow-700 mb-3 flex items-center">
             <span className="mr-2">⚠️</span>
-            Recommendations
+            Warnings ({warnings.length})
           </h4>
           <div className="space-y-2">
             {warnings.map((warning, index) => (
-              <div key={index} className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                <div className="text-sm font-medium text-yellow-800 mb-1">
-                  {warning.title}
-                </div>
-                <div className="text-xs text-yellow-600">
-                  {warning.message}
+              <div key={index} className="flex items-start p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <div className="w-2 h-2 bg-yellow-500 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                <div className="flex-1">
+                  <p className="text-sm text-yellow-800 font-medium">{warning.message}</p>
+                  {warning.nodeId && (
+                    <p className="text-xs text-yellow-600 mt-1">Node ID: {warning.nodeId}</p>
+                  )}
+                  {warning.edgeId && (
+                    <p className="text-xs text-yellow-600 mt-1">Edge ID: {warning.edgeId}</p>
+                  )}
                 </div>
               </div>
             ))}
@@ -94,43 +104,49 @@ export default function ValidationPanel({ nodes, edges }: ValidationPanelProps) 
         </div>
       )}
 
-      {/* All Clear */}
-      {errors.length === 0 && warnings.length === 0 && (
-        <div className="card status-success">
+      {/* Success State */}
+      {validationResults.isValid && errors.length === 0 && warnings.length === 0 && (
+        <div className="card bg-green-50 border-green-200">
           <div className="text-center py-6">
             <div className="text-4xl mb-3">🎉</div>
-            <div className="text-lg font-semibold text-green-800 mb-2">
-              Perfect Flow!
-            </div>
-            <div className="text-sm text-green-600">
-              Your game flow passes all validation checks. Great design!
-            </div>
+            <h4 className="text-lg font-semibold text-green-700 mb-2">Perfect Flow!</h4>
+            <p className="text-sm text-green-600">
+              Your flow is valid and ready to use. No errors or warnings detected.
+            </p>
           </div>
         </div>
       )}
 
       {/* Validation Rules */}
-      <div className="card bg-gray-50">
-        <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+      <div className="card bg-blue-50 border-blue-200">
+        <h4 className="text-sm font-semibold text-blue-700 mb-3 flex items-center">
           <span className="mr-2">📋</span>
           Validation Rules
         </h4>
-        <div className="space-y-2 text-xs text-gray-600">
+        <div className="text-xs text-blue-600 space-y-2">
           <div className="flex items-start">
-            <span className="text-green-500 mr-2 mt-0.5">✓</span>
-            <span>Must have exactly one Start block</span>
+            <span className="font-semibold mr-2">1.</span>
+            <span>Flow must start with exactly one Start block</span>
           </div>
           <div className="flex items-start">
-            <span className="text-green-500 mr-2 mt-0.5">✓</span>
-            <span>Must have at least one End block</span>
+            <span className="font-semibold mr-2">2.</span>
+            <span>Flow must end with at least one End block</span>
           </div>
           <div className="flex items-start">
-            <span className="text-green-500 mr-2 mt-0.5">✓</span>
-            <span>Choice blocks must have 2+ outputs</span>
+            <span className="font-semibold mr-2">3.</span>
+            <span>Choice blocks must have 2 or more outputs</span>
           </div>
           <div className="flex items-start">
-            <span className="text-green-500 mr-2 mt-0.5">✓</span>
-            <span>Enemy blocks must connect to Treasure or End</span>
+            <span className="font-semibold mr-2">4.</span>
+            <span>Enemy blocks must connect to Treasure or End blocks</span>
+          </div>
+          <div className="flex items-start">
+            <span className="font-semibold mr-2">5.</span>
+            <span>No orphaned nodes (nodes without connections)</span>
+          </div>
+          <div className="flex items-start">
+            <span className="font-semibold mr-2">6.</span>
+            <span>No circular dependencies</span>
           </div>
         </div>
       </div>
