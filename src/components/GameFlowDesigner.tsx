@@ -6,6 +6,7 @@ import BlockDetailsPanel from './BlockDetailsPanel'
 import ValidationPanel from './ValidationPanel'
 import SaveLoadPanel from './SaveLoadPanel'
 import UndoRedoPanel from './UndoRedoPanel'
+import ComputationPanel from './ComputationPanel'
 import { Node, Edge } from 'reactflow'
 import { HistoryManager } from '@/utils/history'
 import { loadFromLocalStorage } from '@/utils/persistence'
@@ -14,7 +15,7 @@ export default function GameFlowDesigner() {
   const [selectedNode, setSelectedNode] = useState<Node | null>(null)
   const [nodes, setNodes] = useState<Node[]>([])
   const [edges, setEdges] = useState<Edge[]>([])
-  const [activeTab, setActiveTab] = useState<'details' | 'validation' | 'save' | 'undo'>('details')
+  const [activeTab, setActiveTab] = useState<'details' | 'validation' | 'save' | 'undo' | 'computation'>('details')
   const [historyManager] = useState(() => new HistoryManager(20))
   const [canUndo, setCanUndo] = useState(false)
   const [canRedo, setCanRedo] = useState(false)
@@ -142,7 +143,7 @@ export default function GameFlowDesigner() {
         <div className="flex border-b border-gray-300">
           <button 
             onClick={() => setActiveTab('details')}
-            className={`flex-1 px-2 py-2 text-xs font-medium ${
+            className={`flex-1 px-1 py-2 text-xs font-medium ${
               activeTab === 'details' 
                 ? 'text-gray-700 bg-white border-b-2 border-blue-500' 
                 : 'text-gray-500 hover:text-gray-700'
@@ -152,7 +153,7 @@ export default function GameFlowDesigner() {
           </button>
           <button 
             onClick={() => setActiveTab('validation')}
-            className={`flex-1 px-2 py-2 text-xs font-medium ${
+            className={`flex-1 px-1 py-2 text-xs font-medium ${
               activeTab === 'validation' 
                 ? 'text-gray-700 bg-white border-b-2 border-blue-500' 
                 : 'text-gray-500 hover:text-gray-700'
@@ -161,8 +162,18 @@ export default function GameFlowDesigner() {
             Validation
           </button>
           <button 
+            onClick={() => setActiveTab('computation')}
+            className={`flex-1 px-1 py-2 text-xs font-medium ${
+              activeTab === 'computation' 
+                ? 'text-gray-700 bg-white border-b-2 border-blue-500' 
+                : 'text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            Analysis
+          </button>
+          <button 
             onClick={() => setActiveTab('save')}
-            className={`flex-1 px-2 py-2 text-xs font-medium ${
+            className={`flex-1 px-1 py-2 text-xs font-medium ${
               activeTab === 'save' 
                 ? 'text-gray-700 bg-white border-b-2 border-blue-500' 
                 : 'text-gray-500 hover:text-gray-700'
@@ -172,7 +183,7 @@ export default function GameFlowDesigner() {
           </button>
           <button 
             onClick={() => setActiveTab('undo')}
-            className={`flex-1 px-2 py-2 text-xs font-medium ${
+            className={`flex-1 px-1 py-2 text-xs font-medium ${
               activeTab === 'undo' 
                 ? 'text-gray-700 bg-white border-b-2 border-blue-500' 
                 : 'text-gray-500 hover:text-gray-700'
@@ -196,6 +207,12 @@ export default function GameFlowDesigner() {
           {activeTab === 'validation' && (
             <div className="p-4">
               <ValidationPanel nodes={nodes} edges={edges} />
+            </div>
+          )}
+          
+          {activeTab === 'computation' && (
+            <div className="p-4">
+              <ComputationPanel nodes={nodes} edges={edges} />
             </div>
           )}
           
