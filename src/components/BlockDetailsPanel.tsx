@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Node } from 'reactflow'
 import { 
   StartBlockProperties, 
@@ -16,331 +16,347 @@ interface BlockDetailsPanelProps {
 }
 
 export default function BlockDetailsPanel({ selectedNode, onUpdateNode }: BlockDetailsPanelProps) {
-  const [properties, setProperties] = useState<Record<string, any>>(
-    selectedNode?.data?.properties || {}
-  )
+  const [properties, setProperties] = useState<Record<string, any>>({})
 
-  React.useEffect(() => {
-    setProperties(selectedNode?.data?.properties || {})
+  useEffect(() => {
+    if (selectedNode) {
+      setProperties(selectedNode.data?.properties || {})
+    } else {
+      setProperties({})
+    }
   }, [selectedNode])
 
   const handlePropertyChange = (key: string, value: any) => {
     const newProperties = { ...properties, [key]: value }
     setProperties(newProperties)
+    
     if (selectedNode) {
       onUpdateNode(selectedNode.id, newProperties)
     }
   }
 
-  const renderStartProperties = () => (
-    <div className="space-y-3">
+  const renderStartBlockDetails = () => (
+    <div className="space-y-4">
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+        <label className="input-label">Title</label>
         <input
           type="text"
+          className="input-field"
           value={properties.title || ''}
           onChange={(e) => handlePropertyChange('title', e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-          placeholder="Game Start"
+          placeholder="Adventure Begins"
         />
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+        <label className="input-label">Description</label>
         <textarea
+          className="input-field min-h-[80px] resize-none"
           value={properties.description || ''}
           onChange={(e) => handlePropertyChange('description', e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-          rows={3}
-          placeholder="Welcome to the adventure!"
+          placeholder="Welcome to your adventure..."
         />
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Starting Health</label>
+        <label className="input-label">Starting Health</label>
         <input
           type="number"
+          className="input-field"
           value={properties.startingHealth || 100}
           onChange={(e) => handlePropertyChange('startingHealth', parseInt(e.target.value))}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
           min="1"
           max="1000"
         />
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Starting Gold</label>
+        <label className="input-label">Starting Gold</label>
         <input
           type="number"
+          className="input-field"
           value={properties.startingGold || 0}
           onChange={(e) => handlePropertyChange('startingGold', parseInt(e.target.value))}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
           min="0"
           max="10000"
         />
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Difficulty</label>
+        <label className="input-label">Difficulty</label>
         <select
-          value={properties.difficulty || 'Medium'}
+          className="input-field"
+          value={properties.difficulty || 'medium'}
           onChange={(e) => handlePropertyChange('difficulty', e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
         >
-          <option value="Easy">Easy</option>
-          <option value="Medium">Medium</option>
-          <option value="Hard">Hard</option>
+          <option value="easy">Easy</option>
+          <option value="medium">Medium</option>
+          <option value="hard">Hard</option>
         </select>
       </div>
     </div>
   )
 
-  const renderChoiceProperties = () => (
-    <div className="space-y-3">
+  const renderChoiceBlockDetails = () => (
+    <div className="space-y-4">
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Question</label>
+        <label className="input-label">Question</label>
         <textarea
+          className="input-field min-h-[80px] resize-none"
           value={properties.question || ''}
           onChange={(e) => handlePropertyChange('question', e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          rows={2}
-          placeholder="What will you do?"
+          placeholder="What do you choose?"
         />
       </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Option A</label>
-        <input
-          type="text"
-          value={properties.optionA || ''}
-          onChange={(e) => handlePropertyChange('optionA', e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          placeholder="First choice"
-        />
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="input-label">Option A</label>
+          <input
+            type="text"
+            className="input-field"
+            value={properties.optionA || ''}
+            onChange={(e) => handlePropertyChange('optionA', e.target.value)}
+            placeholder="First choice"
+          />
+        </div>
+        <div>
+          <label className="input-label">Option B</label>
+          <input
+            type="text"
+            className="input-field"
+            value={properties.optionB || ''}
+            onChange={(e) => handlePropertyChange('optionB', e.target.value)}
+            placeholder="Second choice"
+          />
+        </div>
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Consequence A</label>
-        <input
-          type="text"
+        <label className="input-label">Consequence A</label>
+        <textarea
+          className="input-field min-h-[60px] resize-none"
           value={properties.consequenceA || ''}
           onChange={(e) => handlePropertyChange('consequenceA', e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          placeholder="What happens with option A"
+          placeholder="What happens with option A?"
         />
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Option B</label>
-        <input
-          type="text"
-          value={properties.optionB || ''}
-          onChange={(e) => handlePropertyChange('optionB', e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          placeholder="Second choice"
-        />
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Consequence B</label>
-        <input
-          type="text"
+        <label className="input-label">Consequence B</label>
+        <textarea
+          className="input-field min-h-[60px] resize-none"
           value={properties.consequenceB || ''}
           onChange={(e) => handlePropertyChange('consequenceB', e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          placeholder="What happens with option B"
+          placeholder="What happens with option B?"
         />
       </div>
     </div>
   )
 
-  const renderEnemyProperties = () => (
-    <div className="space-y-3">
+  const renderEnemyBlockDetails = () => (
+    <div className="space-y-4">
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+        <label className="input-label">Name</label>
         <input
           type="text"
+          className="input-field"
           value={properties.name || ''}
           onChange={(e) => handlePropertyChange('name', e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
           placeholder="Goblin Warrior"
         />
       </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Health</label>
-        <input
-          type="number"
-          value={properties.health || 50}
-          onChange={(e) => handlePropertyChange('health', parseInt(e.target.value))}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
-          min="1"
-          max="1000"
-        />
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="input-label">Health</label>
+          <input
+            type="number"
+            className="input-field"
+            value={properties.health || 50}
+            onChange={(e) => handlePropertyChange('health', parseInt(e.target.value))}
+            min="1"
+            max="1000"
+          />
+        </div>
+        <div>
+          <label className="input-label">Attack</label>
+          <input
+            type="number"
+            className="input-field"
+            value={properties.attack || 10}
+            onChange={(e) => handlePropertyChange('attack', parseInt(e.target.value))}
+            min="1"
+            max="100"
+          />
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="input-label">Defense</label>
+          <input
+            type="number"
+            className="input-field"
+            value={properties.defense || 5}
+            onChange={(e) => handlePropertyChange('defense', parseInt(e.target.value))}
+            min="0"
+            max="100"
+          />
+        </div>
+        <div>
+          <label className="input-label">Gold Reward</label>
+          <input
+            type="number"
+            className="input-field"
+            value={properties.goldReward || 25}
+            onChange={(e) => handlePropertyChange('goldReward', parseInt(e.target.value))}
+            min="0"
+            max="1000"
+          />
+        </div>
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Attack Power</label>
+        <label className="input-label">Experience Points</label>
         <input
           type="number"
-          value={properties.attack || 10}
-          onChange={(e) => handlePropertyChange('attack', parseInt(e.target.value))}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
-          min="1"
-          max="100"
-        />
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Defense</label>
-        <input
-          type="number"
-          value={properties.defense || 5}
-          onChange={(e) => handlePropertyChange('defense', parseInt(e.target.value))}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+          className="input-field"
+          value={properties.experiencePoints || 15}
+          onChange={(e) => handlePropertyChange('experiencePoints', parseInt(e.target.value))}
           min="0"
-          max="100"
-        />
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Gold Reward</label>
-        <input
-          type="number"
-          value={properties.reward || 25}
-          onChange={(e) => handlePropertyChange('reward', parseInt(e.target.value))}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
-          min="0"
-          max="1000"
-        />
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Experience Points</label>
-        <input
-          type="number"
-          value={properties.experience || 15}
-          onChange={(e) => handlePropertyChange('experience', parseInt(e.target.value))}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
-          min="0"
-          max="1000"
+          max="500"
         />
       </div>
     </div>
   )
 
-  const renderTreasureProperties = () => (
-    <div className="space-y-3">
+  const renderTreasureBlockDetails = () => (
+    <div className="space-y-4">
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+        <label className="input-label">Name</label>
         <input
           type="text"
+          className="input-field"
           value={properties.name || ''}
           onChange={(e) => handlePropertyChange('name', e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
-          placeholder="Gold Coin"
+          placeholder="Ancient Sword"
         />
       </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Value</label>
-        <input
-          type="number"
-          value={properties.value || 10}
-          onChange={(e) => handlePropertyChange('value', parseInt(e.target.value))}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
-          min="1"
-          max="10000"
-        />
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="input-label">Value</label>
+          <input
+            type="number"
+            className="input-field"
+            value={properties.value || 100}
+            onChange={(e) => handlePropertyChange('value', parseInt(e.target.value))}
+            min="1"
+            max="10000"
+          />
+        </div>
+        <div>
+          <label className="input-label">Type</label>
+          <select
+            className="input-field"
+            value={properties.type || 'gold'}
+            onChange={(e) => handlePropertyChange('type', e.target.value)}
+          >
+            <option value="gold">Gold</option>
+            <option value="item">Item</option>
+            <option value="experience">Experience</option>
+            <option value="weapon">Weapon</option>
+            <option value="armor">Armor</option>
+          </select>
+        </div>
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
+        <label className="input-label">Rarity</label>
         <select
-          value={properties.type || 'gold'}
-          onChange={(e) => handlePropertyChange('type', e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
-        >
-          <option value="gold">Gold</option>
-          <option value="item">Item</option>
-          <option value="experience">Experience</option>
-          <option value="weapon">Weapon</option>
-          <option value="armor">Armor</option>
-        </select>
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Rarity</label>
-        <select
+          className="input-field"
           value={properties.rarity || 'common'}
           onChange={(e) => handlePropertyChange('rarity', e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
         >
           <option value="common">Common</option>
+          <option value="uncommon">Uncommon</option>
           <option value="rare">Rare</option>
           <option value="epic">Epic</option>
           <option value="legendary">Legendary</option>
         </select>
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+        <label className="input-label">Description</label>
         <textarea
+          className="input-field min-h-[80px] resize-none"
           value={properties.description || ''}
           onChange={(e) => handlePropertyChange('description', e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
-          rows={2}
-          placeholder="A shiny gold coin..."
+          placeholder="A magnificent treasure awaits..."
         />
       </div>
     </div>
   )
 
-  const renderEndProperties = () => (
-    <div className="space-y-3">
+  const renderEndBlockDetails = () => (
+    <div className="space-y-4">
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+        <label className="input-label">Title</label>
         <input
           type="text"
+          className="input-field"
           value={properties.title || ''}
           onChange={(e) => handlePropertyChange('title', e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-          placeholder="Game Over"
+          placeholder="The End"
         />
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Ending Type</label>
+        <label className="input-label">Ending Type</label>
         <select
-          value={properties.endingType || 'neutral'}
+          className="input-field"
+          value={properties.endingType || 'success'}
           onChange={(e) => handlePropertyChange('endingType', e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
         >
-          <option value="victory">Victory</option>
-          <option value="defeat">Defeat</option>
+          <option value="success">Success</option>
+          <option value="failure">Failure</option>
           <option value="neutral">Neutral</option>
         </select>
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Message</label>
+        <label className="input-label">Message</label>
         <textarea
+          className="input-field min-h-[80px] resize-none"
           value={properties.message || ''}
           onChange={(e) => handlePropertyChange('message', e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-          rows={3}
-          placeholder="Thanks for playing!"
+          placeholder="Congratulations! You have completed your adventure..."
         />
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Final Score</label>
+        <label className="input-label">Final Score</label>
         <input
           type="number"
+          className="input-field"
           value={properties.finalScore || 0}
           onChange={(e) => handlePropertyChange('finalScore', parseInt(e.target.value))}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
           min="0"
           max="10000"
+        />
+      </div>
+      <div>
+        <label className="input-label">Unlock Condition (Optional)</label>
+        <input
+          type="text"
+          className="input-field"
+          value={properties.unlockCondition || ''}
+          onChange={(e) => handlePropertyChange('unlockCondition', e.target.value)}
+          placeholder="Complete all side quests"
         />
       </div>
     </div>
   )
 
-  const renderProperties = () => {
+  const renderBlockDetails = () => {
     if (!selectedNode) return null
 
     switch (selectedNode.type) {
       case 'start':
-        return renderStartProperties()
+        return renderStartBlockDetails()
       case 'choice':
-        return renderChoiceProperties()
+        return renderChoiceBlockDetails()
       case 'enemy':
-        return renderEnemyProperties()
+        return renderEnemyBlockDetails()
       case 'treasure':
-        return renderTreasureProperties()
+        return renderTreasureBlockDetails()
       case 'end':
-        return renderEndProperties()
+        return renderEndBlockDetails()
       default:
         return null
     }
@@ -348,39 +364,84 @@ export default function BlockDetailsPanel({ selectedNode, onUpdateNode }: BlockD
 
   if (!selectedNode) {
     return (
-      <div className="text-gray-500 text-sm">
-        Click a block to see its details
+      <div className="space-y-6">
+        <div className="card-header">
+          <h3 className="text-lg font-semibold text-gray-800 flex items-center">
+            <span className="mr-2">📝</span>
+            Block Details
+          </h3>
+          <p className="text-sm text-gray-600">Select a block to edit its properties</p>
+        </div>
+        
+        <div className="card">
+          <div className="text-center py-8">
+            <div className="text-4xl mb-3">🎯</div>
+            <div className="text-gray-500 text-sm">
+              Click on any block in the canvas to view and edit its details
+            </div>
+          </div>
+        </div>
+
+        <div className="card bg-blue-50 border-blue-200">
+          <h4 className="text-sm font-semibold text-blue-700 mb-2 flex items-center">
+            <span className="mr-2">💡</span>
+            Tips
+          </h4>
+          <div className="text-xs text-blue-600 space-y-1">
+            <div>• Drag blocks from the palette to create them</div>
+            <div>• Click blocks to select and edit properties</div>
+            <div>• Connect blocks with arrows for flow</div>
+            <div>• Use Delete key to remove selected items</div>
+          </div>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="space-y-4">
-      <div className="border-b border-gray-300 pb-3">
-        <h3 className="text-lg font-semibold text-gray-800 capitalize">
-          {selectedNode.type} Block
+    <div className="space-y-6">
+      <div className="card-header">
+        <h3 className="text-lg font-semibold text-gray-800 flex items-center">
+          <span className="mr-2">📝</span>
+          Block Details
         </h3>
         <p className="text-sm text-gray-600">
-          ID: {selectedNode.id}
+          Editing: <span className="font-medium capitalize">{selectedNode.type}</span> block
         </p>
       </div>
-      
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Label</label>
-        <input
-          type="text"
-          value={selectedNode.data?.label || ''}
-          onChange={(e) => {
-            // This would need to be handled by the parent component
-            console.log('Label change:', e.target.value)
-          }}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
-        />
+
+      <div className="card">
+        <div className="space-y-4">
+          <div>
+            <label className="input-label">Block Label</label>
+            <input
+              type="text"
+              className="input-field"
+              value={selectedNode.data?.label || ''}
+              onChange={(e) => {
+                if (selectedNode) {
+                  onUpdateNode(selectedNode.id, { 
+                    ...properties, 
+                    label: e.target.value 
+                  })
+                }
+              }}
+              placeholder="Enter block label"
+            />
+          </div>
+          
+          {renderBlockDetails()}
+        </div>
       </div>
 
-      <div>
-        <h4 className="text-md font-medium text-gray-700 mb-3">Properties</h4>
-        {renderProperties()}
+      <div className="card bg-green-50 border-green-200">
+        <h4 className="text-sm font-semibold text-green-700 mb-2 flex items-center">
+          <span className="mr-2">✅</span>
+          Changes Saved
+        </h4>
+        <div className="text-xs text-green-600">
+          All changes are automatically saved and will be included in exports
+        </div>
       </div>
     </div>
   )

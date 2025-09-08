@@ -1,17 +1,8 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useRef } from 'react'
 import { Node, Edge } from 'reactflow'
-import { 
-  exportFlowToJSON, 
-  importFlowFromJSON, 
-  downloadJSON, 
-  uploadJSON,
-  saveToLocalStorage,
-  loadFromLocalStorage,
-  clearLocalStorage,
-  FlowData
-} from '@/utils/persistence'
+import { saveFlowAsJson, loadFlowFromJson, saveFlowToLocalStorage, loadFlowFromLocalStorage, clearLocalStorage } from '@/utils/persistence'
 
 interface SaveLoadPanelProps {
   nodes: Node[]
@@ -20,165 +11,195 @@ interface SaveLoadPanelProps {
 }
 
 export default function SaveLoadPanel({ nodes, edges, onLoadFlow }: SaveLoadPanelProps) {
-  const [flowName, setFlowName] = useState('Untitled Flow')
-  const [isLoading, setIsLoading] = useState(false)
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const showMessage = (type: 'success' | 'error', text: string) => {
-    setMessage({ type, text })
-    setTimeout(() => setMessage(null), 3000)
-  }
-
-  const handleExport = () => {
+  const handleExportJson = () => {
     try {
-      const jsonString = exportFlowToJSON(nodes, edges, flowName)
-      downloadJSON(jsonString, `${flowName.replace(/\s+/g, '-').toLowerCase()}.json`)
-      showMessage('success', 'Flow exported successfully!')
+      saveFlowAsJson(nodes, edges)
     } catch (error) {
-      showMessage('error', `Export failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      console.error('Export failed:', error)
+      alert('Export failed. Please try again.')
     }
   }
 
-  const handleImport = async () => {
-    try {
-      setIsLoading(true)
-      const jsonString = await uploadJSON()
-      const flowData = importFlowFromJSON(jsonString)
-      
-      onLoadFlow(flowData.nodes, flowData.edges)
-      
-      if (flowData.metadata?.name) {
-        setFlowName(flowData.metadata.name)
+  const handleImportJson = () => {
+    fileInputRef.current?.click()
+  }
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (file) {
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        try {
+          const result = loadFlowFromJson(e.target?.result as string)
+          if (result) {
+            onLoadFlow(result.nodes, result.edges)
+            alert('Flow imported successfully!')
+          } else {
+            alert('Invalid file format. Please select a valid flow file.')
+          }
+        } catch (error) {
+          console.error('Import failed:', error)
+          alert('Import failed. Please check the file format.')
+        }
       }
-      
-      showMessage('success', 'Flow imported successfully!')
-    } catch (error) {
-      showMessage('error', `Import failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
-    } finally {
-      setIsLoading(false)
+      reader.readAsText(file)
     }
   }
 
   const handleSaveToLocalStorage = () => {
     try {
-      saveToLocalStorage(nodes, edges)
-      showMessage('success', 'Flow saved to browser storage!')
+      saveFlowToLocalStorage(nodes, edges)
+      alert('Flow saved to browser storage!')
     } catch (error) {
-      showMessage('error', `Save failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      console.error('Save failed:', error)
+      alert('Save failed. Please try again.')
     }
   }
 
   const handleLoadFromLocalStorage = () => {
     try {
-      const flowData = loadFromLocalStorage()
-      if (flowData) {
-        onLoadFlow(flowData.nodes, flowData.edges)
-        
-        if (flowData.metadata?.name) {
-          setFlowName(flowData.metadata.name)
-        }
-        
-        showMessage('success', 'Flow loaded from browser storage!')
+      const savedFlow = loadFlowFromLocalStorage()
+      if (savedFlow) {
+        onLoadFlow(savedFlow.nodes, savedFlow.edges)
+        alert('Flow loaded from browser storage!')
       } else {
-        showMessage('error', 'No saved flow found in browser storage')
+        alert('No saved flow found in browser storage.')
       }
     } catch (error) {
-      showMessage('error', `Load failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      console.error('Load failed:', error)
+      alert('Load failed. Please try again.')
     }
   }
 
   const handleClearLocalStorage = () => {
-    try {
-      clearLocalStorage()
-      showMessage('success', 'Browser storage cleared!')
-    } catch (error) {
-      showMessage('error', `Clear failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    if (confirm('Are you sure you want to clear all saved flows from browser storage?')) {
+      try {
+        clearLocalStorage()
+        alert('Browser storage cleared!')
+      } catch (error) {
+        console.error('Clear failed:', error)
+        alert('Clear failed. Please try again.')
+      }
     }
   }
 
   return (
-    <div className="space-y-4">
-      <div className="border-b border-gray-300 pb-3">
-        <h3 className="text-lg font-semibold text-gray-800">Save & Load</h3>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="card-header">
+        <h3 className="text-lg font-semibold text-gray-800 flex items-center">
+          <span className="mr-2">💾</span>
+          Save & Load
+        </h3>
+        <p className="text-sm text-gray-600">Export, import, and manage your flows</p>
       </div>
 
-      {/* Flow Name */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Flow Name</label>
-        <input
-          type="text"
-          value={flowName}
-          onChange={(e) => setFlowName(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          placeholder="Enter flow name"
-        />
-      </div>
-
-      {/* Message */}
-      {message && (
-        <div className={`p-3 rounded-md ${
-          message.type === 'success' 
-            ? 'bg-green-50 text-green-700 border border-green-200' 
-            : 'bg-red-50 text-red-700 border border-red-200'
-        }`}>
-          {message.text}
-        </div>
-      )}
-
-      {/* Export/Import */}
-      <div className="space-y-2">
-        <h4 className="text-sm font-medium text-gray-700">File Operations</h4>
-        <div className="grid grid-cols-2 gap-2">
-          <button
-            onClick={handleExport}
-            className="px-3 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+      {/* JSON Operations */}
+      <div className="card">
+        <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+          <span className="mr-2">📄</span>
+          JSON File Operations
+        </h4>
+        <div className="space-y-3">
+          <button 
+            onClick={handleExportJson}
+            className="btn-primary w-full flex items-center justify-center"
           >
-            Export JSON
+            <span className="mr-2">📤</span>
+            Export to JSON
           </button>
-          <button
-            onClick={handleImport}
-            disabled={isLoading}
-            className="px-3 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50"
+          <button 
+            onClick={handleImportJson}
+            className="btn-secondary w-full flex items-center justify-center"
           >
-            {isLoading ? 'Loading...' : 'Import JSON'}
+            <span className="mr-2">📥</span>
+            Import from JSON
           </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".json"
+            onChange={handleFileChange}
+            className="hidden"
+          />
         </div>
       </div>
 
-      {/* Local Storage */}
-      <div className="space-y-2">
-        <h4 className="text-sm font-medium text-gray-700">Browser Storage</h4>
-        <div className="grid grid-cols-2 gap-2">
-          <button
+      {/* Browser Storage Operations */}
+      <div className="card">
+        <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+          <span className="mr-2">🌐</span>
+          Browser Storage
+        </h4>
+        <div className="space-y-3">
+          <button 
             onClick={handleSaveToLocalStorage}
-            className="px-3 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-purple-500"
+            className="btn-success w-full flex items-center justify-center"
           >
-            Save Locally
+            <span className="mr-2">💾</span>
+            Save to Browser
           </button>
-          <button
+          <button 
             onClick={handleLoadFromLocalStorage}
-            className="px-3 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
+            className="btn-secondary w-full flex items-center justify-center"
           >
-            Load Local
+            <span className="mr-2">📂</span>
+            Load from Browser
+          </button>
+          <button 
+            onClick={handleClearLocalStorage}
+            className="btn-danger w-full flex items-center justify-center"
+          >
+            <span className="mr-2">🗑️</span>
+            Clear Browser Storage
           </button>
         </div>
-        <button
-          onClick={handleClearLocalStorage}
-          className="w-full px-3 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500"
-        >
-          Clear Storage
-        </button>
       </div>
 
-      {/* Info */}
-      <div className="text-xs text-gray-500 space-y-1">
-        <div className="font-medium">Tips:</div>
-        <ul className="list-disc list-inside space-y-1 ml-2">
-          <li>Export creates a downloadable JSON file</li>
-          <li>Import loads a JSON file from your computer</li>
-          <li>Local storage saves automatically in your browser</li>
-          <li>All data includes nodes, edges, and metadata</li>
-        </ul>
+      {/* Flow Statistics */}
+      <div className="card bg-gray-50">
+        <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+          <span className="mr-2">📊</span>
+          Current Flow Stats
+        </h4>
+        <div className="grid grid-cols-2 gap-3 text-sm">
+          <div className="flex justify-between">
+            <span className="text-gray-600">Nodes:</span>
+            <span className="font-semibold text-gray-800">{nodes.length}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-600">Connections:</span>
+            <span className="font-semibold text-gray-800">{edges.length}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-600">File Size:</span>
+            <span className="font-semibold text-gray-800">
+              {Math.round(JSON.stringify({ nodes, edges }).length / 1024)}KB
+            </span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-600">Last Modified:</span>
+            <span className="font-semibold text-gray-800">
+              {new Date().toLocaleTimeString()}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Help */}
+      <div className="card bg-blue-50 border-blue-200">
+        <h4 className="text-sm font-semibold text-blue-700 mb-2 flex items-center">
+          <span className="mr-2">💡</span>
+          Tips
+        </h4>
+        <div className="text-xs text-blue-600 space-y-1">
+          <div>• JSON files can be shared with others</div>
+          <div>• Browser storage persists between sessions</div>
+          <div>• Auto-save runs every 2 seconds</div>
+          <div>• Files include all node properties and connections</div>
+        </div>
       </div>
     </div>
   )

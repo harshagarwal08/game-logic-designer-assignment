@@ -89,152 +89,148 @@ export default function GameFlowDesigner() {
     }
   }
 
+  const tabs = [
+    { id: 'details', label: 'Details', icon: '📝' },
+    { id: 'validation', label: 'Validation', icon: '✅' },
+    { id: 'computation', label: 'Analysis', icon: '📊' },
+    { id: 'save', label: 'Save/Load', icon: '💾' },
+    { id: 'undo', label: 'History', icon: '↩️' }
+  ] as const
+
   return (
-    <div className="flex h-full w-full">
+    <div className="flex h-full w-full bg-gray-50">
       {/* Side Panel */}
-      <div className="w-80 bg-gray-100 border-r border-gray-300 flex flex-col">
-        <div className="p-4 border-b border-gray-300">
-          <h1 className="text-xl font-bold text-gray-800">Game Flow Designer</h1>
+      <div className="w-96 bg-white shadow-lg border-r border-gray-200 flex flex-col">
+        {/* Header */}
+        <div className="panel-header">
+          <div className="flex items-center space-x-3">
+            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-sm">GF</span>
+            </div>
+            <div>
+              <h1 className="text-xl font-bold text-gray-800">Game Flow Designer</h1>
+              <p className="text-sm text-gray-500">Design interactive game flows</p>
+            </div>
+          </div>
         </div>
         
         {/* Block Palette */}
-        <div className="p-4 border-b border-gray-300">
-          <h2 className="text-lg font-semibold text-gray-700 mb-3">Block Palette</h2>
-          <div className="space-y-2">
+        <div className="panel-content border-b border-gray-200">
+          <h2 className="text-lg font-semibold text-gray-700 mb-4 flex items-center">
+            <span className="mr-2">🎮</span>
+            Block Palette
+          </h2>
+          <div className="grid grid-cols-2 gap-3">
             <div 
-              className="bg-green-500 text-white p-2 rounded cursor-grab hover:bg-green-600 active:cursor-grabbing"
+              className="block-palette-item bg-gradient-to-br from-green-500 to-green-600"
               draggable
               onDragStart={(event) => onDragStart(event, 'start')}
             >
-              Start
+              <div className="text-sm font-medium">🚀 Start</div>
+              <div className="text-xs opacity-90">Begin adventure</div>
             </div>
             <div 
-              className="bg-blue-500 text-white p-2 rounded cursor-grab hover:bg-blue-600 active:cursor-grabbing"
+              className="block-palette-item bg-gradient-to-br from-blue-500 to-blue-600"
               draggable
               onDragStart={(event) => onDragStart(event, 'choice')}
             >
-              Choice
+              <div className="text-sm font-medium">🤔 Choice</div>
+              <div className="text-xs opacity-90">Player decision</div>
             </div>
             <div 
-              className="bg-red-500 text-white p-2 rounded cursor-grab hover:bg-red-600 active:cursor-grabbing"
+              className="block-palette-item bg-gradient-to-br from-red-500 to-red-600"
               draggable
               onDragStart={(event) => onDragStart(event, 'enemy')}
             >
-              Enemy
+              <div className="text-sm font-medium">⚔️ Enemy</div>
+              <div className="text-xs opacity-90">Combat encounter</div>
             </div>
             <div 
-              className="bg-yellow-500 text-white p-2 rounded cursor-grab hover:bg-yellow-600 active:cursor-grabbing"
+              className="block-palette-item bg-gradient-to-br from-yellow-500 to-yellow-600"
               draggable
               onDragStart={(event) => onDragStart(event, 'treasure')}
             >
-              Treasure
+              <div className="text-sm font-medium">💰 Treasure</div>
+              <div className="text-xs opacity-90">Reward chest</div>
             </div>
             <div 
-              className="bg-purple-500 text-white p-2 rounded cursor-grab hover:bg-purple-600 active:cursor-grabbing"
+              className="block-palette-item bg-gradient-to-br from-purple-500 to-purple-600 col-span-2"
               draggable
               onDragStart={(event) => onDragStart(event, 'end')}
             >
-              End
+              <div className="text-sm font-medium">🏁 End</div>
+              <div className="text-xs opacity-90">Adventure conclusion</div>
             </div>
           </div>
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex border-b border-gray-300">
-          <button 
-            onClick={() => setActiveTab('details')}
-            className={`flex-1 px-1 py-2 text-xs font-medium ${
-              activeTab === 'details' 
-                ? 'text-gray-700 bg-white border-b-2 border-blue-500' 
-                : 'text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            Details
-          </button>
-          <button 
-            onClick={() => setActiveTab('validation')}
-            className={`flex-1 px-1 py-2 text-xs font-medium ${
-              activeTab === 'validation' 
-                ? 'text-gray-700 bg-white border-b-2 border-blue-500' 
-                : 'text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            Validation
-          </button>
-          <button 
-            onClick={() => setActiveTab('computation')}
-            className={`flex-1 px-1 py-2 text-xs font-medium ${
-              activeTab === 'computation' 
-                ? 'text-gray-700 bg-white border-b-2 border-blue-500' 
-                : 'text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            Analysis
-          </button>
-          <button 
-            onClick={() => setActiveTab('save')}
-            className={`flex-1 px-1 py-2 text-xs font-medium ${
-              activeTab === 'save' 
-                ? 'text-gray-700 bg-white border-b-2 border-blue-500' 
-                : 'text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            Save/Load
-          </button>
-          <button 
-            onClick={() => setActiveTab('undo')}
-            className={`flex-1 px-1 py-2 text-xs font-medium ${
-              activeTab === 'undo' 
-                ? 'text-gray-700 bg-white border-b-2 border-blue-500' 
-                : 'text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            Undo/Redo
-          </button>
+        <div className="flex border-b border-gray-200 bg-gray-50">
+          {tabs.map((tab) => (
+            <button 
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`tab-button ${activeTab === tab.id ? 'active' : 'inactive'}`}
+            >
+              <span className="mr-1">{tab.icon}</span>
+              <span className="hidden sm:inline">{tab.label}</span>
+            </button>
+          ))}
         </div>
 
         {/* Panel Content */}
         <div className="flex-1 overflow-y-auto">
-          {activeTab === 'details' && (
-            <div className="p-4">
-              <BlockDetailsPanel 
-                selectedNode={selectedNode} 
-                onUpdateNode={onNodeUpdate}
-              />
-            </div>
-          )}
-          
-          {activeTab === 'validation' && (
-            <div className="p-4">
-              <ValidationPanel nodes={nodes} edges={edges} />
-            </div>
-          )}
-          
-          {activeTab === 'computation' && (
-            <div className="p-4">
-              <ComputationPanel nodes={nodes} edges={edges} />
-            </div>
-          )}
-          
-          {activeTab === 'save' && (
-            <div className="p-4">
-              <SaveLoadPanel 
-                nodes={nodes} 
-                edges={edges} 
-                onLoadFlow={handleLoadFlow}
-              />
-            </div>
-          )}
-          
-          {activeTab === 'undo' && (
-            <div className="p-4">
-              <UndoRedoPanel 
-                historyManager={historyManager}
-                onUndo={handleUndo}
-                onRedo={handleRedo}
-              />
-            </div>
-          )}
+          <div className="fade-in">
+            {activeTab === 'details' && (
+              <div className="panel-content">
+                <BlockDetailsPanel 
+                  selectedNode={selectedNode} 
+                  onUpdateNode={onNodeUpdate}
+                />
+              </div>
+            )}
+            
+            {activeTab === 'validation' && (
+              <div className="panel-content">
+                <ValidationPanel nodes={nodes} edges={edges} />
+              </div>
+            )}
+            
+            {activeTab === 'computation' && (
+              <div className="panel-content">
+                <ComputationPanel nodes={nodes} edges={edges} />
+              </div>
+            )}
+            
+            {activeTab === 'save' && (
+              <div className="panel-content">
+                <SaveLoadPanel 
+                  nodes={nodes} 
+                  edges={edges} 
+                  onLoadFlow={handleLoadFlow}
+                />
+              </div>
+            )}
+            
+            {activeTab === 'undo' && (
+              <div className="panel-content">
+                <UndoRedoPanel 
+                  historyManager={historyManager}
+                  onUndo={handleUndo}
+                  onRedo={handleRedo}
+                />
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="panel-header bg-gray-50">
+          <div className="flex items-center justify-between text-xs text-gray-500">
+            <span>Nodes: {nodes.length}</span>
+            <span>Connections: {edges.length}</span>
+            <span>v1.0.0</span>
+          </div>
         </div>
       </div>
 
