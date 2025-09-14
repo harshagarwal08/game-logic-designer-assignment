@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { HistoryManager } from '@/utils/history'
 
 interface UndoRedoPanelProps {
@@ -10,7 +10,23 @@ interface UndoRedoPanelProps {
 }
 
 export default function UndoRedoPanel({ historyManager, onUndo, onRedo }: UndoRedoPanelProps) {
-  const historyInfo = historyManager.getHistoryInfo()
+  const [historyInfo, setHistoryInfo] = useState(historyManager.getHistoryInfo())
+
+  // Update history info when history changes
+  useEffect(() => {
+    const updateHistoryInfo = () => {
+      setHistoryInfo(historyManager.getHistoryInfo())
+    }
+    
+    // Update immediately
+    updateHistoryInfo()
+    
+    // Set up interval to check for changes
+    const interval = setInterval(updateHistoryInfo, 100)
+    
+    return () => clearInterval(interval)
+  }, [historyManager])
+
   const canUndo = historyInfo.canUndo
   const canRedo = historyInfo.canRedo
   const currentPosition = historyInfo.current

@@ -1,13 +1,11 @@
 'use client'
 
-import React, { useCallback, useMemo, useState, useEffect } from 'react'
+import React, { useCallback, useMemo, useState, useEffect, useRef } from 'react'
 import ReactFlow, {
   BackgroundVariant,
   Background,
   Controls,
   MiniMap,
-  useNodesState,
-  useEdgesState,
   addEdge,
   Connection,
   Edge,
@@ -17,6 +15,8 @@ import ReactFlow, {
   ConnectionMode,
   NodeMouseHandler,
   useKeyPress,
+  useNodesState,
+  useEdgesState,
 } from 'reactflow'
 import 'reactflow/dist/style.css'
 import { nodeTypes } from './nodes'
@@ -24,10 +24,9 @@ import { v4 as uuidv4 } from 'uuid'
 import { HistoryManager } from '@/utils/history'
 import { saveToLocalStorage } from '@/utils/persistence'
 
-const initialNodes: Node[] = []
-const initialEdges: Edge[] = []
-
 interface FlowCanvasProps {
+  nodes?: Node[]
+  edges?: Edge[]
   onNodeAdd?: (nodeType: string) => void
   onNodeSelect?: (node: Node | null) => void
   onNodeUpdate?: (nodeId: string, properties: Record<string, any>) => void
@@ -37,6 +36,8 @@ interface FlowCanvasProps {
 }
 
 export default function FlowCanvas({ 
+  nodes: externalNodes = [],
+  edges: externalEdges = [],
   onNodeAdd, 
   onNodeSelect, 
   onNodeUpdate, 
@@ -44,63 +45,135 @@ export default function FlowCanvas({
   historyManager,
   onHistoryChange 
 }: FlowCanvasProps) {
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes)
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges)
+  // Use ReactFlow's built-in state management to prevent strobing
+  const [nodes, setNodes, onNodesChange] = useNodesState(externalNodes)
+  const [edges, setEdges, onEdgesChange] = useEdgesState(externalEdges)
   const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null)
   const [selectedNodes, setSelectedNodes] = useState<Node[]>([])
   const [selectedEdges, setSelectedEdges] = useState<Edge[]>([])
+  
+  // Use refs to prevent infinite loops and track changes
+  const isUpdatingFromExternal = useRef(false)
+  const lastExternalNodes = useRef<Node[]>([])
+  const lastExternalEdges = useRef<Edge[]>([])
+  const hasInitialized = useRef(false)
+  const updateTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   const deleteKeyPressed = useKeyPress('Delete')
   const backspaceKeyPressed = useKeyPress('Backspace')
   const ctrlZPressed = useKeyPress('z', {})
   const ctrlYPressed = useKeyPress('y', {})
 
-  // Autosave to localStorage every 5 seconds
+  // Initialize with external data only once
   useEffect(() => {
-    const interval = setInterval(() => {
+    if (!hasInitialized.current) {
+      setNodes(externalNodes)
+      setEdges(externalEdges)
+      lastExternalNodes.current = externalNodes
+      lastExternalEdges.current = externalEdges
+      hasInitialized.current = true
+    }
+  }, [])
+
+  // Sync with external nodes and edges only when they actually change
+  useEffect(() => {
+    if (!hasInitialized.current) return
+    
+    const nodesChanged = JSON.stringify(externalNodes) !== JSON.stringify(lastExternalNodes.current)
+    const edgesChanged = JSON.stringify(externalEdges) !== JSON.stringify(lastExternalEdges.current)
+    
+    if (nodesChanged || edgesChanged) {
+      isUpdatingFromExternal.current = true
+      setNodes(externalNodes)
+      setEdges(externalEdges)
+      lastExternalNodes.current = externalNodes
+      lastExternalEdges.current = externalEdges
+      
+      // Reset the flag after state update
+      setTimeout(() => {
+        isUpdatingFromExternal.current = false
+      }, 0)
+    }
+  }, [externalNodes, externalEdges])
+
+  // Debounced autosave to localStorage
+  useEffect(() => {
+    if (updateTimeoutRef.current) {
+      clearTimeout(updateTimeoutRef.current)
+    }
+    
+    updateTimeoutRef.current = setTimeout(() => {
       if (nodes.length > 0 || edges.length > 0) {
         saveToLocalStorage(nodes, edges)
       }
-    }, 5000)
+    }, 2000) // Debounce for 2 seconds
 
-    return () => clearInterval(interval)
+    return () => {
+      if (updateTimeoutRef.current) {
+        clearTimeout(updateTimeoutRef.current)
+      }
+    }
   }, [nodes, edges])
 
-  // Save to history when nodes or edges change
+  // Debounced history save
   useEffect(() => {
-    if (nodes.length > 0 || edges.length > 0) {
-      historyManager.saveState(nodes, edges)
-      onHistoryChange?.(historyManager.canUndo(), historyManager.canRedo())
+    if (!isUpdatingFromExternal.current && hasInitialized.current && (nodes.length > 0 || edges.length > 0)) {
+      if (updateTimeoutRef.current) {
+        clearTimeout(updateTimeoutRef.current)
+      }
+      
+      updateTimeoutRef.current = setTimeout(() => {
+        historyManager.saveState(nodes, edges)
+        onHistoryChange?.(historyManager.canUndo(), historyManager.canRedo())
+      }, 500) // Debounce for 500ms
     }
-  }, [nodes, edges, historyManager, onHistoryChange])
+  }, [nodes, edges])
+
+  // Debounced parent notification
+  useEffect(() => {
+    if (!isUpdatingFromExternal.current && hasInitialized.current) {
+      if (updateTimeoutRef.current) {
+        clearTimeout(updateTimeoutRef.current)
+      }
+      
+      updateTimeoutRef.current = setTimeout(() => {
+        onFlowChange?.(nodes, edges)
+      }, 100) // Debounce for 100ms
+    }
+  }, [nodes, edges])
 
   // Handle undo/redo keyboard shortcuts
   useEffect(() => {
     if (ctrlZPressed) {
       const state = historyManager.undo()
       if (state) {
+        isUpdatingFromExternal.current = true
         setNodes(state.nodes)
         setEdges(state.edges)
         onHistoryChange?.(historyManager.canUndo(), historyManager.canRedo())
+        onFlowChange?.(state.nodes, state.edges)
+        setTimeout(() => {
+          isUpdatingFromExternal.current = false
+        }, 0)
       }
     }
-  }, [ctrlZPressed, historyManager, onHistoryChange])
+  }, [ctrlZPressed])
 
   useEffect(() => {
     if (ctrlYPressed) {
       const state = historyManager.redo()
       if (state) {
+        isUpdatingFromExternal.current = true
         setNodes(state.nodes)
         setEdges(state.edges)
         onHistoryChange?.(historyManager.canUndo(), historyManager.canRedo())
+        onFlowChange?.(state.nodes, state.edges)
+        setTimeout(() => {
+          isUpdatingFromExternal.current = false
+        }, 0)
       }
     }
-  }, [ctrlYPressed, historyManager, onHistoryChange])
-
-  // Notify parent of flow changes
-  useEffect(() => {
-    onFlowChange?.(nodes, edges)
-  }, [nodes, edges, onFlowChange])
+  }, [ctrlYPressed])
 
   // Handle delete key press
   useEffect(() => {
@@ -115,7 +188,7 @@ export default function FlowCanvas({
         setSelectedEdges([])
       }
     }
-  }, [deleteKeyPressed, backspaceKeyPressed, selectedNodes, selectedEdges, setNodes, setEdges, onNodeSelect])
+  }, [deleteKeyPressed, backspaceKeyPressed, selectedNodes, selectedEdges])
 
   const onConnect = useCallback(
     (params: Connection) => {
@@ -134,13 +207,18 @@ export default function FlowCanvas({
   const onDrop = useCallback(
     (event: React.DragEvent) => {
       event.preventDefault()
+      console.log('🎯 Drop event triggered')
 
       const type = event.dataTransfer.getData('application/reactflow')
+      console.log('🎯 Dropped type:', type)
+      
       if (typeof type === 'undefined' || !type) {
+        console.log('❌ No type found in dataTransfer')
         return
       }
 
       if (!reactFlowInstance) {
+        console.log('❌ No reactFlowInstance')
         return
       }
 
@@ -148,6 +226,8 @@ export default function FlowCanvas({
         x: event.clientX,
         y: event.clientY,
       })
+
+      console.log('🎯 Creating node at position:', position)
 
       const newNode: Node = {
         id: uuidv4(),
@@ -159,6 +239,7 @@ export default function FlowCanvas({
         },
       }
 
+      console.log('🎯 New node created:', newNode)
       setNodes((nds) => nds.concat(newNode))
       onNodeAdd?.(type)
     },
@@ -200,33 +281,6 @@ export default function FlowCanvas({
     )
     onNodeUpdate?.(nodeId, properties)
   }, [setNodes, onNodeUpdate])
-
-  // Expose methods for external undo/redo
-  const undo = useCallback(() => {
-    const state = historyManager.undo()
-    if (state) {
-      setNodes(state.nodes)
-      setEdges(state.edges)
-      onHistoryChange?.(historyManager.canUndo(), historyManager.canRedo())
-    }
-  }, [historyManager, onHistoryChange])
-
-  const redo = useCallback(() => {
-    const state = historyManager.redo()
-    if (state) {
-      setNodes(state.nodes)
-      setEdges(state.edges)
-      onHistoryChange?.(historyManager.canUndo(), historyManager.canRedo())
-    }
-  }, [historyManager, onHistoryChange])
-
-  const loadFlow = useCallback((newNodes: Node[], newEdges: Edge[]) => {
-    setNodes(newNodes)
-    setEdges(newEdges)
-    historyManager.clear()
-    historyManager.saveState(newNodes, newEdges)
-    onHistoryChange?.(historyManager.canUndo(), historyManager.canRedo())
-  }, [setNodes, setEdges, historyManager, onHistoryChange])
 
   const getDefaultProperties = (type: string) => {
     switch (type) {
@@ -291,7 +345,10 @@ export default function FlowCanvas({
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
-        onInit={setReactFlowInstance}
+        onInit={(instance) => {
+          console.log('🎯 ReactFlow initialized:', instance)
+          setReactFlowInstance(instance)
+        }}
         onDrop={onDrop}
         onDragOver={onDragOver}
         onNodeClick={onNodeClick}
@@ -332,6 +389,8 @@ export default function FlowCanvas({
 }
 
 export function FlowCanvasWithProvider({ 
+  nodes,
+  edges,
   onNodeAdd, 
   onNodeSelect, 
   onNodeUpdate, 
@@ -342,6 +401,8 @@ export function FlowCanvasWithProvider({
   return (
     <ReactFlowProvider>
       <FlowCanvas 
+        nodes={nodes}
+        edges={edges}
         onNodeAdd={onNodeAdd} 
         onNodeSelect={onNodeSelect} 
         onNodeUpdate={onNodeUpdate} 

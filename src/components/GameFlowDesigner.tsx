@@ -1,12 +1,13 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { FlowCanvasWithProvider } from "./FlowCanvas";
 import BlockDetailsPanel from "./BlockDetailsPanel";
 import ValidationPanel from "./ValidationPanel";
 import SaveLoadPanel from "./SaveLoadPanel";
 import UndoRedoPanel from "./UndoRedoPanel";
 import ComputationPanel from "./ComputationPanel";
+import AIPanel from "./AIPanel";
 
 import { Node, Edge } from "reactflow";
 import { HistoryManager } from "@/utils/history";
@@ -34,22 +35,24 @@ export default function GameFlowDesigner() {
       setCanUndo(historyManager.canUndo());
       setCanRedo(historyManager.canRedo());
     }
-  }, [historyManager]);
+  }, []);
 
-  const onDragStart = (event: React.DragEvent, nodeType: string) => {
+  const onDragStart = useCallback((event: React.DragEvent, nodeType: string) => {
+    console.log('🎯 Drag start:', nodeType);
     event.dataTransfer.setData("application/reactflow", nodeType);
     event.dataTransfer.effectAllowed = "move";
-  };
+    console.log('🎯 DataTransfer set:', event.dataTransfer.getData("application/reactflow"));
+  }, []);
 
-  const onNodeAdd = (nodeType: string) => {
+  const onNodeAdd = useCallback((nodeType: string) => {
     console.log(`Added ${nodeType} node`);
-  };
+  }, []);
 
-  const onNodeSelect = (node: Node | null) => {
+  const onNodeSelect = useCallback((node: Node | null) => {
     setSelectedNode(node);
-  };
+  }, []);
 
-  const onNodeUpdate = (nodeId: string, properties: Record<string, any>) => {
+  const onNodeUpdate = useCallback((nodeId: string, properties: Record<string, any>) => {
     console.log(`Updated node ${nodeId} with properties:`, properties);
     setNodes(prevNodes => 
       prevNodes.map(node => 
@@ -65,28 +68,31 @@ export default function GameFlowDesigner() {
           : node
       )
     );
-  };
+  }, []);
 
-  const onFlowChange = (newNodes: Node[], newEdges: Edge[]) => {
+  const onFlowChange = useCallback((newNodes: Node[], newEdges: Edge[]) => {
     setNodes(newNodes);
     setEdges(newEdges);
-  };
+    historyManager.saveState(newNodes, newEdges);
+    setCanUndo(historyManager.canUndo());
+    setCanRedo(historyManager.canRedo());
+  }, []);
 
-  const onHistoryChange = (undoAvailable: boolean, redoAvailable: boolean) => {
+  const onHistoryChange = useCallback((undoAvailable: boolean, redoAvailable: boolean) => {
     setCanUndo(undoAvailable);
     setCanRedo(redoAvailable);
-  };
+  }, []);
 
-  const handleLoadFlow = (newNodes: Node[], newEdges: Edge[]) => {
+  const handleLoadFlow = useCallback((newNodes: Node[], newEdges: Edge[]) => {
     setNodes(newNodes);
     setEdges(newEdges);
     historyManager.clear();
     historyManager.saveState(newNodes, newEdges);
     setCanUndo(historyManager.canUndo());
     setCanRedo(historyManager.canRedo());
-  };
+  }, []);
 
-  const handleUndo = () => {
+  const handleUndo = useCallback(() => {
     const state = historyManager.undo();
     if (state) {
       setNodes(state.nodes);
@@ -94,9 +100,9 @@ export default function GameFlowDesigner() {
       setCanUndo(historyManager.canUndo());
       setCanRedo(historyManager.canRedo());
     }
-  };
+  }, []);
 
-  const handleRedo = () => {
+  const handleRedo = useCallback(() => {
     const state = historyManager.redo();
     if (state) {
       setNodes(state.nodes);
@@ -104,26 +110,37 @@ export default function GameFlowDesigner() {
       setCanUndo(historyManager.canUndo());
       setCanRedo(historyManager.canRedo());
     }
-  };
+  }, []);
 
-  //   // const handleAIGenerateFlow = (newNodes: Node[], newEdges: Edge[]) => {
-  //     setNodes(newNodes)
-  //     setEdges(newEdges)
-  //     historyManager.clear()
-  //     historyManager.saveState(newNodes, newEdges)
-  //     setCanUndo(historyManager.canUndo())
-  //     setCanRedo(historyManager.canRedo())
-  //     setActiveTab('validation') // Switch to validation to show the generated flow
-  //   }
+  const handleAIGenerateFlow = useCallback((newNodes: Node[], newEdges: Edge[]) => {
+    console.log("🚀 AI Generated flow:", newNodes.length, "nodes,", newEdges.length, "edges");
+    setNodes(newNodes);
+    setEdges(newEdges);
+    historyManager.clear();
+    historyManager.saveState(newNodes, newEdges);
+    setCanUndo(historyManager.canUndo());
+    setCanRedo(historyManager.canRedo());
+    setActiveTab('validation'); // Switch to validation to show the generated flow
+  }, []);
 
-  const tabs = [
+  // Memoize tabs to prevent re-rendering
+  const tabs = useMemo(() => [
     { id: "details", label: "Details", icon: "📝" },
     { id: "validation", label: "Validation", icon: "✅" },
     { id: "computation", label: "Analysis", icon: "📊" },
-
+    { id: "ai", label: "AI Assistant", icon: "🤖" },
     { id: "save", label: "Save/Load", icon: "💾" },
     { id: "undo", label: "History", icon: "↩️" },
-  ] as const;
+  ] as const, []);
+
+  // Memoize block palette items to prevent re-rendering
+  const blockPaletteItems = useMemo(() => [
+    { type: "start", label: "🚀 Start", className: "bg-gradient-to-br from-green-500 to-green-600" },
+    { type: "choice", label: "🤔 Choice", className: "bg-gradient-to-br from-blue-500 to-blue-600" },
+    { type: "enemy", label: "⚔️ Enemy", className: "bg-gradient-to-br from-red-500 to-red-600" },
+    { type: "treasure", label: "💰 Treasure", className: "bg-gradient-to-br from-yellow-500 to-yellow-600" },
+    { type: "end", label: "🏁 End", className: "bg-gradient-to-br from-purple-500 to-purple-600 col-span-2" },
+  ], []);
 
   return (
     <div className="flex h-full w-full bg-gray-50">
@@ -153,41 +170,16 @@ export default function GameFlowDesigner() {
             Block Palette
           </h2>
           <div className="grid grid-cols-2 gap-3">
-            <div
-              className="block-palette-item bg-gradient-to-br from-green-500 to-green-600"
-              draggable
-              onDragStart={(event) => onDragStart(event, "start")}
-            >
-              <div className="text-sm font-medium">🚀 Start</div>
-            </div>
-            <div
-              className="block-palette-item bg-gradient-to-br from-blue-500 to-blue-600"
-              draggable
-              onDragStart={(event) => onDragStart(event, "choice")}
-            >
-              <div className="text-sm font-medium">🤔 Choice</div>
-            </div>
-            <div
-              className="block-palette-item bg-gradient-to-br from-red-500 to-red-600"
-              draggable
-              onDragStart={(event) => onDragStart(event, "enemy")}
-            >
-              <div className="text-sm font-medium">⚔️ Enemy</div>
-            </div>
-            <div
-              className="block-palette-item bg-gradient-to-br from-yellow-500 to-yellow-600"
-              draggable
-              onDragStart={(event) => onDragStart(event, "treasure")}
-            >
-              <div className="text-sm font-medium">💰 Treasure</div>
-            </div>
-            <div
-              className="block-palette-item bg-gradient-to-br from-purple-500 to-purple-600 col-span-2"
-              draggable
-              onDragStart={(event) => onDragStart(event, "end")}
-            >
-              <div className="text-sm font-medium">🏁 End</div>
-            </div>
+            {blockPaletteItems.map((item) => (
+              <div
+                key={item.type}
+                className={`block-palette-item ${item.className}`}
+                draggable
+                onDragStart={(event) => onDragStart(event, item.type)}
+              >
+                <div className="text-sm font-medium">{item.label}</div>
+              </div>
+            ))}
           </div>
         </div>
 
@@ -232,6 +224,16 @@ export default function GameFlowDesigner() {
               </div>
             )}
 
+            {activeTab === "ai" && (
+              <div className="panel-content">
+                <AIPanel 
+                  nodes={nodes} 
+                  edges={edges} 
+                  onGenerateFlow={handleAIGenerateFlow}
+                />
+              </div>
+            )}
+
             {activeTab === "save" && (
               <div className="panel-content">
                 <SaveLoadPanel
@@ -267,6 +269,8 @@ export default function GameFlowDesigner() {
       {/* Canvas Area */}
       <div className="flex-1 bg-white">
         <FlowCanvasWithProvider
+          nodes={nodes}
+          edges={edges}
           onNodeAdd={onNodeAdd}
           onNodeSelect={onNodeSelect}
           onNodeUpdate={onNodeUpdate}
