@@ -1,6 +1,6 @@
 # Game Flow Designer
 
-A professional web application for designing interactive game flows using a visual canvas with drag-and-drop blocks, real-time validation, and comprehensive analysis tools.
+A professional web application for designing interactive game flows using a visual canvas with drag-and-drop blocks, real-time validation, AI-powered flow generation, and comprehensive analysis tools.
 
 ## 🚀 Features
 
@@ -8,10 +8,11 @@ A professional web application for designing interactive game flows using a visu
 - **Visual Canvas**: Interactive grid-based canvas with pan, zoom, and smooth connections
 - **Block Palette**: Five game block types (Start, Choice, Enemy, Treasure, End) with drag-and-drop
 - **Real-time Validation**: Comprehensive flow validation with error and warning detection
-- **Block Details**: Rich property editing for each block type with 2-5 relevant properties
+- **Block Details**: Read-only property display for each block type with comprehensive details
 - **Save/Load**: JSON export/import and browser localStorage with auto-save
 - **Undo/Redo**: Full history management with 20+ steps
 - **Flow Analysis**: Advanced computation panel with Total Adventure Score
+- **AI Assistant**: Text-to-flow generation from natural language descriptions
 
 ### Technical Features
 - **React Flow Integration**: Professional canvas with custom nodes and edges
@@ -19,6 +20,7 @@ A professional web application for designing interactive game flows using a visu
 - **Responsive Design**: Professional UI with Tailwind CSS
 - **Unit Tests**: Comprehensive test coverage for core utilities
 - **Performance Optimized**: Efficient algorithms and real-time updates
+- **AI Flow Generation**: Intelligent parsing of text descriptions into valid game flows
 
 ## 🛠️ Technology Stack
 
@@ -35,8 +37,8 @@ A professional web application for designing interactive game flows using a visu
   - Keyboard shortcuts and accessibility
 
 ### State Management
-- **Zustand 4.4.7**: Lightweight state management
-  - **Rationale**: Chosen over Redux for simplicity and performance
+- **Custom History Manager**: Lightweight state management for undo/redo
+  - **Rationale**: Chosen for simplicity and performance
   - Minimal boilerplate with TypeScript support
   - Perfect for React Flow's state management needs
   - No complex middleware or reducers required
@@ -103,6 +105,26 @@ A professional web application for designing interactive game flows using a visu
 - **Unlock Condition**: Optional requirement for special endings
 
 **Rationale**: Endings provide closure and satisfaction. Multiple ending types create replayability, while scoring systems enable comparison and achievement hunting.
+
+## 🤖 AI Assistant Features
+
+### Text-to-Flow Generation
+- **Natural Language Input**: Type descriptions like "Start → Choice → Enemy → End"
+- **Intelligent Parsing**: Automatically recognizes block types and creates proper connections
+- **Validation Compliance**: Generated flows automatically pass all validation rules
+- **Smart Connections**: AI ensures Choice blocks have multiple outputs and Enemy blocks connect to Treasure/End
+
+### Example Prompts
+- `Start → Choice → Enemy → End`
+- `Start → Choice → Treasure → End`
+- `Start → Enemy → Choice → Treasure → End`
+- `Start → Choice → Enemy → Choice → End`
+
+### AI Features
+- **Automatic Validation**: Generated flows are structurally valid
+- **Proper Branching**: Choice blocks get multiple outputs automatically
+- **Reward Connections**: Enemy blocks are connected to Treasure or End blocks
+- **Clean Canvas**: No unnecessary labels or clutter in generated flows
 
 ## ✅ Validation Rules
 
@@ -207,9 +229,17 @@ npm run test:coverage # Generate coverage report
 ### Creating a Flow
 1. **Drag Blocks**: Drag block types from the palette to the canvas
 2. **Connect Blocks**: Click and drag from connection handles to create arrows
-3. **Edit Properties**: Click any block to edit its properties in the side panel
+3. **View Properties**: Click any block to view its properties in the side panel
 4. **Validate Flow**: Check the Validation tab for errors and warnings
 5. **Analyze Flow**: View the Analysis tab for comprehensive metrics
+6. **Generate with AI**: Use the AI Assistant to create flows from text descriptions
+
+### AI Assistant Usage
+1. **Open AI Tab**: Click on the AI Assistant tab
+2. **Enter Description**: Type your flow description (e.g., "Start → Choice → Enemy → End")
+3. **Generate Flow**: Click "Generate Flow" and wait for processing
+4. **Review Results**: The generated flow will appear on the canvas
+5. **Validate**: Check that the flow passes all validation rules
 
 ### Keyboard Shortcuts
 - **Delete/Backspace**: Remove selected blocks or connections
@@ -238,15 +268,17 @@ src/
 │   ├── FlowCanvas.tsx          # React Flow wrapper
 │   ├── ComputationPanel.tsx    # Analysis panel
 │   ├── ValidationPanel.tsx     # Validation panel
-│   ├── BlockDetailsPanel.tsx   # Property editor
+│   ├── BlockDetailsPanel.tsx   # Property display panel
 │   ├── SaveLoadPanel.tsx       # Persistence panel
 │   ├── UndoRedoPanel.tsx       # History panel
+│   ├── AIPanel.tsx             # AI Assistant panel
 │   └── nodes/                  # Custom node components
 ├── utils/                 # Utility functions
 │   ├── validation.ts     # Flow validation logic
 │   ├── computation.ts    # Score calculation
 │   ├── persistence.ts    # Save/load operations
-│   └── history.ts        # Undo/redo management
+│   ├── history.ts        # Undo/redo management
+│   └── aiSuggestions.ts  # AI flow generation
 ├── types/                # TypeScript definitions
 │   └── blockTypes.ts     # Block property interfaces
 └── __tests__/            # Unit tests
@@ -257,12 +289,14 @@ src/
 - **Component State**: Local state for UI interactions
 - **History Management**: Custom implementation for undo/redo
 - **Persistence**: Utility functions for save/load operations
+- **AI Integration**: Text parsing and flow generation
 
 ### Performance Considerations
 - **Debounced Auto-save**: Prevents excessive localStorage writes
 - **Efficient Algorithms**: Optimized validation and computation
-- **React Flow Optimization**: Proper node/edge handling
+- **React Flow Optimization**: Proper node/edge handling with useNodesState/useEdgesState
 - **Memory Management**: History limit prevents memory leaks
+- **State Synchronization**: Prevents infinite re-render loops
 
 ## 🔧 Customization
 
@@ -272,6 +306,7 @@ src/
 3. Add to node types registry in `FlowCanvas.tsx`
 4. Update validation rules in `src/utils/validation.ts`
 5. Add computation logic in `src/utils/computation.ts`
+6. Update AI parsing in `src/utils/aiSuggestions.ts`
 
 ### Extending Validation Rules
 1. Add new rule function in `src/utils/validation.ts`
@@ -285,21 +320,29 @@ src/
 3. Update computation panel UI
 4. Add unit tests for new calculations
 
+### Extending AI Features
+1. Add new parsing patterns in `src/components/AIPanel.tsx`
+2. Create additional node generation logic
+3. Add new example prompts
+4. Extend validation compliance features
+
 ## 📈 Future Enhancements
 
 ### Potential Features
-- **AI Integration**: Text-to-flow generation or block explanations
+- **Advanced AI**: Integration with real AI services for more sophisticated flow generation
 - **Collaborative Editing**: Real-time multi-user editing
 - **Template System**: Pre-built flow templates
 - **Advanced Analytics**: More detailed flow metrics
 - **Export Options**: Multiple export formats (PNG, SVG, PDF)
 - **Plugin System**: Extensible architecture for custom blocks
+- **Flow Templates**: Pre-built common game flow patterns
 
 ### Technical Improvements
 - **Performance**: Virtualization for large flows
 - **Accessibility**: Enhanced keyboard navigation
 - **Mobile Support**: Touch-optimized interface
 - **Offline Support**: Progressive Web App features
+- **Real AI Integration**: Connect to actual AI services
 
 ## 🤝 Contributing
 
