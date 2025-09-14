@@ -256,11 +256,43 @@ export default function AIPanel({ nodes, edges, onGenerateFlow }: AIPanelProps) 
     setIsGenerating(false)
   }
 
-  const examplePrompts = [
-    "Start → Choice → Enemy → End",
-    "Start → Choice → Treasure → End",
-    "Start → Enemy → Choice → Treasure → End",
-    "Start → Choice → Enemy → Choice → End"
+  const quickExamples = [
+    {
+      title: "🏰 Classic Adventure",
+      description: "A traditional hero's journey",
+      prompt: "Start → Choice → Enemy → Treasure → End",
+      storyline: "Begin your quest, face a crucial decision, battle a foe, claim your reward, and complete your adventure!"
+    },
+    {
+      title: "⚔️ Combat Focused",
+      description: "Multiple battles and challenges",
+      prompt: "Start → Enemy → Choice → Enemy → Treasure → End",
+      storyline: "Jump straight into action! Fight enemies, make strategic choices, face more battles, and earn your victory!"
+    },
+    {
+      title: "🧭 Choice Heavy",
+      description: "Multiple decision points",
+      prompt: "Start → Choice → Choice → Enemy → End",
+      storyline: "Navigate through complex decisions! Make multiple choices that shape your path, then face the final challenge!"
+    },
+    {
+      title: "💎 Treasure Hunt",
+      description: "Focus on discovery and rewards",
+      prompt: "Start → Choice → Treasure → Choice → End",
+      storyline: "Embark on a treasure hunt! Make choices that lead to discoveries, find valuable rewards, and choose your ending!"
+    },
+    {
+      title: "🎯 Balanced Quest",
+      description: "Mix of all elements",
+      prompt: "Start → Choice → Enemy → Choice → Treasure → End",
+      storyline: "The perfect adventure! Make choices, fight enemies, discover treasures, and create your own epic story!"
+    },
+    {
+      title: "⚡ Quick Adventure",
+      description: "Short and sweet",
+      prompt: "Start → Enemy → End",
+      storyline: "A quick challenge! Face an enemy and prove your worth in this fast-paced adventure!"
+    }
   ]
 
   return (
@@ -268,16 +300,16 @@ export default function AIPanel({ nodes, edges, onGenerateFlow }: AIPanelProps) 
       {/* Header */}
       <div className="card-header">
         <h3 className="text-lg font-semibold text-gray-800 flex items-center">
-          <span className="mr-2">🤖</span>
-          AI Assistant
+          <span className="mr-2 text-2xl">🤖</span>
+          AI Flow Generator
         </h3>
-        <p className="text-sm text-gray-600">Generate flows from text descriptions</p>
+        <p className="text-sm text-gray-600">Transform your ideas into interactive game flows with AI magic!</p>
       </div>
 
       {/* Text-to-Flow Generation */}
       <div className="card">
         <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
-          <span className="mr-2">✨</span>
+          <span className="mr-2 text-lg">✨</span>
           Generate Flow from Text
         </h4>
         <div className="space-y-3">
@@ -285,7 +317,7 @@ export default function AIPanel({ nodes, edges, onGenerateFlow }: AIPanelProps) 
             className="input-field min-h-[100px] resize-none"
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
-            placeholder="Type your flow: Start → Choice → Enemy → End"
+            placeholder="Describe your game flow: Start → Choice → Enemy → End"
           />
           <button
             onClick={handleGenerateFlow}
@@ -296,35 +328,77 @@ export default function AIPanel({ nodes, edges, onGenerateFlow }: AIPanelProps) 
           >
             {isGenerating ? (
               <>
-                <span className="mr-2 animate-spin">⏳</span>
-                Generating Flow...
+                <span className="mr-2 animate-spin text-lg">⚡</span>
+                Generating Your Adventure...
               </>
             ) : (
               <>
-                <span className="mr-2">��</span>
-                Generate Flow
+                <span className="mr-2 text-lg">🚀</span>
+                Generate Adventure Flow
               </>
             )}
           </button>
         </div>
       </div>
 
-      {/* Example Prompts */}
-      <div className="card bg-blue-50 border-blue-200">
-        <h4 className="text-sm font-semibold text-blue-700 mb-3 flex items-center">
-          <span className="mr-2">💡</span>
-          Example Prompts
+      {/* Quick Examples */}
+      <div className="card bg-gradient-to-br from-purple-50 to-blue-50 border-purple-200">
+        <h4 className="text-sm font-semibold text-purple-700 mb-3 flex items-center">
+          <span className="mr-2 text-lg">⚡</span>
+          Quick Examples
         </h4>
-        <div className="space-y-2">
-          {examplePrompts.map((prompt, index) => (
+        <p className="text-xs text-purple-600 mb-4">Click any template to generate a complete adventure flow!</p>
+        <div className="space-y-3">
+          {quickExamples.map((example, index) => (
             <button
               key={index}
-              onClick={() => setInputText(prompt)}
-              className="text-xs text-blue-600 hover:text-blue-800 text-left block w-full p-2 bg-white rounded border hover:bg-blue-50 transition-colors"
+              onClick={() => setInputText(example.prompt)}
+              className="text-left block w-full p-4 bg-white rounded-lg border border-purple-200 hover:bg-purple-50 hover:border-purple-300 transition-all duration-200 shadow-sm hover:shadow-md"
             >
-              "{prompt}"
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="font-semibold text-sm text-purple-800">
+                    {example.title}
+                  </div>
+                  <div className="text-xs text-purple-500 font-mono bg-purple-100 px-2 py-1 rounded">
+                    {example.prompt}
+                  </div>
+                </div>
+                <div className="text-xs text-purple-600">
+                  {example.description}
+                </div>
+                <div className="text-xs text-gray-600 italic leading-relaxed">
+                  "{example.storyline}"
+                </div>
+              </div>
             </button>
           ))}
+        </div>
+      </div>
+
+      {/* Tips */}
+      <div className="card bg-gradient-to-br from-yellow-50 to-orange-50 border-yellow-200">
+        <h4 className="text-sm font-semibold text-yellow-700 mb-3 flex items-center">
+          <span className="mr-2 text-lg">💡</span>
+          Pro Tips
+        </h4>
+        <div className="space-y-2 text-xs text-yellow-700">
+          <div className="flex items-start">
+            <span className="mr-2">🎯</span>
+            <span>Use arrows (→) or dashes (-) to separate block types</span>
+          </div>
+          <div className="flex items-start">
+            <span className="mr-2">🔄</span>
+            <span>AI automatically adds multiple outputs for Choice blocks</span>
+          </div>
+          <div className="flex items-start">
+            <span className="mr-2">⚔️</span>
+            <span>Enemy blocks automatically connect to Treasure or End</span>
+          </div>
+          <div className="flex items-start">
+            <span className="mr-2">✨</span>
+            <span>All generated flows pass validation automatically!</span>
+          </div>
         </div>
       </div>
     </div>
