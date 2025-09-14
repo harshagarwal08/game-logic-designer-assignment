@@ -77,7 +77,7 @@ body {
 
 /* Input styles */
 .input-field {
-  @apply w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200;
+  @apply w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 text-gray-900 bg-white;
 }
 
 .input-label {
@@ -183,7 +183,7 @@ body {
 
 /* Tab styles */
 .tab-button {
-  @apply flex-1 px-3 py-2 text-sm font-medium transition-colors duration-200;
+  @apply flex-1 px-2 py-2 text-xs font-medium transition-colors duration-200;
 }
 
 .tab-button.active {

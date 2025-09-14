@@ -16,6 +16,7 @@ export default function AIPanel({ nodes, edges, onGenerateFlow }: AIPanelProps) 
   const [explanation, setExplanation] = useState('')
 
   const handleGenerateFlow = async () => {
+    console.log("🚀 Generate Flow button clicked with input:", inputText)
     if (!inputText.trim()) return
 
     setIsGenerating(true)
@@ -112,6 +113,7 @@ export default function AIPanel({ nodes, edges, onGenerateFlow }: AIPanelProps) 
     ]
 
     if (onGenerateFlow) {
+      console.log("🚀 Calling onGenerateFlow with:", generatedNodes.length, "nodes and", generatedEdges.length, "edges")
       onGenerateFlow(generatedNodes, generatedEdges)
     }
     
@@ -133,7 +135,7 @@ export default function AIPanel({ nodes, edges, onGenerateFlow }: AIPanelProps) 
       end: `The End block "${block.data?.label}" concludes the adventure. This ${block.data?.properties?.endingType || 'success'} ending gives players a final score of ${block.data?.properties?.finalScore || 0} points. The message "${block.data?.properties?.message}" provides closure to the player's journey.`
     }
     
-    setExplanation(explanations[block.type] || 'This block is part of your game flow.')
+    setExplanation(explanations[block.type as keyof typeof explanations] || 'This block is part of your game flow.')
     setIsGenerating(false)
   }
 

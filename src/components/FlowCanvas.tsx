@@ -2,6 +2,7 @@
 
 import React, { useCallback, useMemo, useState, useEffect } from 'react'
 import ReactFlow, {
+  BackgroundVariant,
   Background,
   Controls,
   MiniMap,
@@ -51,8 +52,8 @@ export default function FlowCanvas({
 
   const deleteKeyPressed = useKeyPress('Delete')
   const backspaceKeyPressed = useKeyPress('Backspace')
-  const ctrlZPressed = useKeyPress('z', { metaKey: true })
-  const ctrlYPressed = useKeyPress('y', { metaKey: true })
+  const ctrlZPressed = useKeyPress('z', {})
+  const ctrlYPressed = useKeyPress('y', {})
 
   // Autosave to localStorage every 5 seconds
   useEffect(() => {
@@ -304,7 +305,7 @@ export default function FlowCanvas({
         fitView
         attributionPosition="bottom-left"
       >
-        <Background variant="dots" gap={20} size={1} />
+        <Background variant={BackgroundVariant.Dots} gap={20} size={1} />
         <Controls />
         <MiniMap
           nodeStrokeColor={(n) => {

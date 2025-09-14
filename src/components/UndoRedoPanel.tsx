@@ -10,10 +10,11 @@ interface UndoRedoPanelProps {
 }
 
 export default function UndoRedoPanel({ historyManager, onUndo, onRedo }: UndoRedoPanelProps) {
-  const canUndo = historyManager.canUndo()
-  const canRedo = historyManager.canRedo()
-  const historySize = historyManager.getHistorySize()
-  const currentPosition = historyManager.getCurrentPosition()
+  const historyInfo = historyManager.getHistoryInfo()
+  const canUndo = historyInfo.canUndo
+  const canRedo = historyInfo.canRedo
+  const currentPosition = historyInfo.current
+  const historySize = historyInfo.total
 
   return (
     <div className="space-y-6">

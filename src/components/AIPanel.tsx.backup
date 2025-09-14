@@ -1,0 +1,604 @@
+'use client'
+
+import React, { useState, useEffect } from 'react'
+import { generateAISuggestions, AISuggestion } from '@/utils/aiSuggestions'
+import { Node, Edge } from 'reactflow'
+
+interface AIPanelProps {
+  selectedNode?: Node | null
+  nodes: Node[]
+  edges: Edge[]
+  onGenerateFlow?: (nodes: Node[], edges: Edge[]) => void
+}
+
+export default function AIPanel({ nodes, edges, selectedNode, onGenerateFlow }: AIPanelProps) {
+  const [inputText, setInputText] = useState('')
+  const [isGenerating, setIsGenerating] = useState(false)
+  const [selectedBlock, setSelectedBlock] = useState<Node | null>(selectedNode || null)
+  const [explanation, setExplanation] = useState('')
+  const [generatedFlows, setGeneratedFlows] = useState<any[]>([])
+
+  // Update selected block when selectedNode prop changes
+  useEffect(() => {
+    setSelectedBlock(selectedNode || null)
+  }, [selectedNode])
+
+  // Mock AI responses based on input text
+  const generateMockFlow = (prompt: string) => {
+    const lowerPrompt = prompt.toLowerCase()
+    
+    // Adventure-themed flows
+    if (lowerPrompt.includes('adventure') || lowerPrompt.includes('quest')) {
+      return {
+        nodes: [
+          {
+            id: '1',
+            type: 'start',
+            position: { x: 100, y: 100 },
+            data: {
+              label: 'Hero\'s Journey',
+              properties: {
+                title: 'Epic Adventure',
+                description: 'A brave hero embarks on an epic quest to save the kingdom',
+                startingHealth: 120,
+                startingGold: 75,
+                difficulty: 'Medium'
+              }
+            }
+          },
+          {
+            id: '2',
+            type: 'choice',
+            position: { x: 350, y: 100 },
+            data: {
+              label: 'Path Decision',
+              properties: {
+                question: 'Which path will you take?',
+                optionA: 'The dangerous mountain pass',
+                optionB: 'The safe forest trail',
+                consequenceA: 'Riskier but potentially more rewarding',
+                consequenceB: 'Safer but longer journey'
+              }
+            }
+          },
+          {
+            id: '3',
+            type: 'enemy',
+            position: { x: 600, y: 50 },
+            data: {
+              label: 'Mountain Troll',
+              properties: {
+                name: 'Mountain Troll',
+                health: 150,
+                attack: 25,
+                defense: 10,
+                reward: 100,
+                experience: 50
+              }
+            }
+          },
+          {
+            id: '4',
+            type: 'treasure',
+            position: { x: 600, y: 150 },
+            data: {
+              label: 'Ancient Artifact',
+              properties: {
+                name: 'Ancient Artifact',
+                value: 200,
+                type: 'weapon',
+                rarity: 'epic',
+                description: 'A powerful weapon from the ancient times'
+              }
+            }
+          },
+          {
+            id: '5',
+            type: 'end',
+            position: { x: 850, y: 100 },
+            data: {
+              label: 'Victory!',
+              properties: {
+                title: 'Kingdom Saved',
+                endingType: 'victory',
+                message: 'Congratulations! You have successfully saved the kingdom!',
+                finalScore: 500,
+                unlockCondition: 'Complete all challenges'
+              }
+            }
+          }
+        ],
+        edges: [
+          { id: '1-2', source: '1', target: '2', type: 'smoothstep' },
+          { id: '2-3', source: '2', target: '3', type: 'smoothstep' },
+          { id: '2-4', source: '2', target: '4', type: 'smoothstep' },
+          { id: '3-5', source: '3', target: '5', type: 'smoothstep' },
+          { id: '4-5', source: '4', target: '5', type: 'smoothstep' }
+        ]
+      }
+    }
+    
+    // Mystery-themed flows
+    if (lowerPrompt.includes('mystery') || lowerPrompt.includes('detective')) {
+      return {
+        nodes: [
+          {
+            id: '1',
+            type: 'start',
+            position: { x: 100, y: 100 },
+            data: {
+              label: 'Crime Scene',
+              properties: {
+                title: 'Mystery Investigation',
+                description: 'A detective arrives at a mysterious crime scene',
+                startingHealth: 100,
+                startingGold: 50,
+                difficulty: 'Hard'
+              }
+            }
+          },
+          {
+            id: '2',
+            type: 'choice',
+            position: { x: 350, y: 100 },
+            data: {
+              label: 'Investigation Choice',
+              properties: {
+                question: 'Where do you investigate first?',
+                optionA: 'Examine the victim',
+                optionB: 'Search for clues',
+                consequenceA: 'Find important evidence',
+                consequenceB: 'Discover hidden information'
+              }
+            }
+          },
+          {
+            id: '3',
+            type: 'treasure',
+            position: { x: 600, y: 50 },
+            data: {
+              label: 'Evidence',
+              properties: {
+                name: 'Key Evidence',
+                value: 150,
+                type: 'item',
+                rarity: 'rare',
+                description: 'Critical evidence that breaks the case'
+              }
+            }
+          },
+          {
+            id: '4',
+            type: 'enemy',
+            position: { x: 600, y: 150 },
+            data: {
+              label: 'Suspect',
+              properties: {
+                name: 'Mysterious Suspect',
+                health: 80,
+                attack: 20,
+                defense: 5,
+                reward: 75,
+                experience: 30
+              }
+            }
+          },
+          {
+            id: '5',
+            type: 'end',
+            position: { x: 850, y: 100 },
+            data: {
+              label: 'Case Solved',
+              properties: {
+                title: 'Mystery Solved',
+                endingType: 'victory',
+                message: 'Excellent detective work! The case is closed.',
+                finalScore: 300,
+                unlockCondition: 'Gather all evidence'
+              }
+            }
+          }
+        ],
+        edges: [
+          { id: '1-2', source: '1', target: '2', type: 'smoothstep' },
+          { id: '2-3', source: '2', target: '3', type: 'smoothstep' },
+          { id: '2-4', source: '2', target: '4', type: 'smoothstep' },
+          { id: '3-5', source: '3', target: '5', type: 'smoothstep' },
+          { id: '4-5', source: '4', target: '5', type: 'smoothstep' }
+        ]
+      }
+    }
+    
+    // Fantasy-themed flows
+    if (lowerPrompt.includes('fantasy') || lowerPrompt.includes('magic') || lowerPrompt.includes('dragon')) {
+      return {
+        nodes: [
+          {
+            id: '1',
+            type: 'start',
+            position: { x: 100, y: 100 },
+            data: {
+              label: 'Magic Academy',
+              properties: {
+                title: 'Fantasy Quest',
+                description: 'A young mage begins their magical journey',
+                startingHealth: 80,
+                startingGold: 100,
+                difficulty: 'Medium'
+              }
+            }
+          },
+          {
+            id: '2',
+            type: 'choice',
+            position: { x: 350, y: 100 },
+            data: {
+              label: 'Magic Choice',
+              properties: {
+                question: 'Which magic do you study?',
+                optionA: 'Fire magic',
+                optionB: 'Ice magic',
+                consequenceA: 'Powerful offensive spells',
+                consequenceB: 'Defensive and control spells'
+              }
+            }
+          },
+          {
+            id: '3',
+            type: 'enemy',
+            position: { x: 600, y: 50 },
+            data: {
+              label: 'Fire Dragon',
+              properties: {
+                name: 'Ancient Fire Dragon',
+                health: 200,
+                attack: 35,
+                defense: 15,
+                reward: 200,
+                experience: 100
+              }
+            }
+          },
+          {
+            id: '4',
+            type: 'treasure',
+            position: { x: 600, y: 150 },
+            data: {
+              label: 'Magic Staff',
+              properties: {
+                name: 'Staff of Power',
+                value: 300,
+                type: 'weapon',
+                rarity: 'legendary',
+                description: 'A legendary staff that amplifies magical power'
+              }
+            }
+          },
+          {
+            id: '5',
+            type: 'end',
+            position: { x: 850, y: 100 },
+            data: {
+              label: 'Master Mage',
+              properties: {
+                title: 'Magical Mastery',
+                endingType: 'victory',
+                message: 'You have become a master of magic!',
+                finalScore: 750,
+                unlockCondition: 'Defeat the dragon'
+              }
+            }
+          }
+        ],
+        edges: [
+          { id: '1-2', source: '1', target: '2', type: 'smoothstep' },
+          { id: '2-3', source: '2', target: '3', type: 'smoothstep' },
+          { id: '2-4', source: '2', target: '4', type: 'smoothstep' },
+          { id: '3-5', source: '3', target: '5', type: 'smoothstep' },
+          { id: '4-5', source: '4', target: '5', type: 'smoothstep' }
+        ]
+      }
+    }
+    
+    // Default flow
+    return {
+      nodes: [
+        {
+          id: '1',
+          type: 'start',
+          position: { x: 100, y: 100 },
+          data: {
+            label: 'Game Start',
+            properties: {
+              title: 'New Adventure',
+              description: 'Begin your journey',
+              startingHealth: 100,
+              startingGold: 50,
+              difficulty: 'Easy'
+            }
+          }
+        },
+        {
+          id: '2',
+          type: 'choice',
+          position: { x: 350, y: 100 },
+          data: {
+            label: 'First Choice',
+            properties: {
+              question: 'What do you do?',
+              optionA: 'Go left',
+              optionB: 'Go right',
+              consequenceA: 'You find a treasure',
+              consequenceB: 'You encounter an enemy'
+            }
+          }
+        },
+        {
+          id: '3',
+          type: 'treasure',
+          position: { x: 600, y: 50 },
+          data: {
+            label: 'Gold Chest',
+            properties: {
+              name: 'Gold Chest',
+              value: 100,
+              type: 'gold',
+              rarity: 'common',
+              description: 'A chest filled with gold coins'
+            }
+          }
+        },
+        {
+          id: '4',
+          type: 'enemy',
+          position: { x: 600, y: 150 },
+          data: {
+            label: 'Goblin',
+            properties: {
+              name: 'Goblin Warrior',
+              health: 60,
+              attack: 15,
+              defense: 5,
+              reward: 50,
+              experience: 25
+            }
+          }
+        },
+        {
+          id: '5',
+          type: 'end',
+          position: { x: 850, y: 100 },
+          data: {
+            label: 'Game Over',
+            properties: {
+              title: 'Adventure Complete',
+              endingType: 'victory',
+              message: 'Well done! Your adventure is complete.',
+              finalScore: 200,
+              unlockCondition: 'Complete the quest'
+            }
+          }
+        }
+      ],
+      edges: [
+        { id: '1-2', source: '1', target: '2', type: 'smoothstep' },
+        { id: '2-3', source: '2', target: '3', type: 'smoothstep' },
+        { id: '2-4', source: '2', target: '4', type: 'smoothstep' },
+        { id: '3-5', source: '3', target: '5', type: 'smoothstep' },
+        { id: '4-5', source: '4', target: '5', type: 'smoothstep' }
+      ]
+    }
+  }
+
+  const handleGenerateFlow = async () => {
+    if (!inputText.trim()) return
+
+    setIsGenerating(true)
+    
+    // Simulate AI processing with realistic delay
+    await new Promise(resolve => setTimeout(resolve, 2000))
+    
+    // Generate mock flow based on input
+    const mockFlow = generateMockFlow(inputText)
+    
+    if (onGenerateFlow) {
+      onGenerateFlow(mockFlow.nodes, mockFlow.edges)
+    }
+    
+    // Store generated flow for history
+    setGeneratedFlows(prev => [...prev, {
+      id: Date.now(),
+      prompt: inputText,
+      timestamp: new Date().toLocaleTimeString(),
+      nodes: mockFlow.nodes.length,
+      edges: mockFlow.edges.length
+    }])
+    
+    setIsGenerating(false)
+  }
+
+  const handleExplainBlock = async (block: Node) => {
+    setSelectedBlock(block)
+    setIsGenerating(true)
+    
+    // Simulate AI explanation with realistic delay
+    await new Promise(resolve => setTimeout(resolve, 1500))
+    
+    const explanations: Record<string, string> = {
+      start: `The Start block "${block.data?.label}" serves as the entry point for your game flow. It establishes the initial game state with ${block.data?.properties?.startingHealth || 100} health points and ${block.data?.properties?.startingGold || 0} gold coins. The ${block.data?.properties?.difficulty || 'medium'} difficulty setting will influence the overall challenge level throughout the adventure. This block is crucial as it sets player expectations and provides the foundation for their journey.`,
+      choice: `The Choice block "${block.data?.label}" creates a branching narrative point where players must make meaningful decisions. The question "${block.data?.properties?.question}" presents players with "${block.data?.properties?.optionA}" or "${block.data?.properties?.optionB}". Each choice leads to different consequences, creating replayability and player agency. This type of block is essential for interactive storytelling and allows designers to create multiple paths through the same content.`,
+      enemy: `The Enemy block "${block.data?.label}" represents a combat encounter that challenges the player. This ${block.data?.properties?.name} has ${block.data?.properties?.health || 50} health points and ${block.data?.properties?.attack || 10} attack power, with ${block.data?.properties?.defense || 0} defense. Defeating this enemy rewards the player with ${block.data?.properties?.reward || 25} gold and ${block.data?.properties?.experience || 15} experience points. Combat encounters should be balanced to provide appropriate challenge while offering meaningful rewards.`,
+      treasure: `The Treasure block "${block.data?.label}" contains valuable rewards for the player. This ${block.data?.properties?.name} is worth ${block.data?.properties?.value || 100} points and is classified as ${block.data?.properties?.rarity || 'common'} rarity. The ${block.data?.properties?.type || 'gold'} type reward enhances different aspects of gameplay. Treasure blocks drive player motivation and provide progression incentives, with rarer items creating excitement and encouraging exploration.`,
+      end: `The End block "${block.data?.label}" concludes the player's adventure with a ${block.data?.properties?.endingType || 'success'} ending. Players receive a final score of ${block.data?.properties?.finalScore || 0} points and see the message "${block.data?.properties?.message}". This block provides closure to the player's journey and may include unlock conditions for special endings. Multiple end blocks allow for different outcomes based on player choices and performance.`
+    }
+    
+    setExplanation(explanations[block.type as string] || 'This block is part of your game flow and contributes to the overall player experience.')
+    setIsGenerating(false)
+  }
+
+  const examplePrompts = [
+    "Create a fantasy adventure with dragons and magic",
+    "Design a mystery game where players investigate crimes",
+    "Build a survival game with resource management",
+    "Make a space exploration game with alien encounters",
+    "Create a medieval quest with knights and castles"
+  ]
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="card-header">
+        <h3 className="text-lg font-semibold text-gray-800 flex items-center">
+          <span className="mr-2">🤖</span>
+          AI Assistant
+        </h3>
+        <p className="text-sm text-gray-600">Generate flows from text or get block explanations</p>
+      </div>
+
+      {/* Text-to-Flow Generation */}
+      <div className="card">
+        <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+          <span className="mr-2">✨</span>
+          Generate Flow from Text
+        </h4>
+        <div className="space-y-3">
+          <textarea
+            className="input-field min-h-[100px] resize-none"
+            value={inputText}
+            onChange={(e) => setInputText(e.target.value)}
+            placeholder="Describe the game flow you want to create... (e.g., 'Create a fantasy adventure with dragons and magic')"
+          />
+          <button
+            onClick={handleGenerateFlow}
+            disabled={!inputText.trim() || isGenerating}
+            className={`btn-primary w-full flex items-center justify-center ${
+              !inputText.trim() || isGenerating ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
+          >
+            {isGenerating ? (
+              <>
+                <span className="mr-2 animate-spin">⏳</span>
+                Generating Flow...
+              </>
+            ) : (
+              <>
+                <span className="mr-2">🚀</span>
+                Generate Flow
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* Example Prompts */}
+      <div className="card bg-blue-50 border-blue-200">
+        <h4 className="text-sm font-semibold text-blue-700 mb-3 flex items-center">
+          <span className="mr-2">💡</span>
+          Example Prompts
+        </h4>
+        <div className="space-y-2">
+          {examplePrompts.map((prompt, index) => (
+            <button
+              key={index}
+              onClick={() => setInputText(prompt)}
+              className="text-xs text-blue-600 hover:text-blue-800 text-left block w-full p-2 bg-white rounded border hover:bg-blue-50 transition-colors"
+            >
+              "{prompt}"
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Block Explanation */}
+      <div className="card">
+        <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+          <span className="mr-2">🔍</span>
+          Explain Selected Block
+        </h4>
+        <div className="space-y-3">
+          {selectedBlock ? (
+            <div className="space-y-2">
+              <div className="p-3 bg-gray-50 rounded border">
+                <div className="text-sm font-medium text-gray-800 mb-1">
+                  Selected: {selectedBlock.data?.label}
+                </div>
+                <div className="text-xs text-gray-600">
+                  Type: {selectedBlock.type} • ID: {selectedBlock.id}
+                </div>
+              </div>
+              <button
+                onClick={() => handleExplainBlock(selectedBlock)}
+                disabled={isGenerating}
+                className={`btn-secondary w-full flex items-center justify-center ${
+                  isGenerating ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
+              >
+                {isGenerating ? (
+                  <>
+                    <span className="mr-2 animate-spin">⏳</span>
+                    Analyzing...
+                  </>
+                ) : (
+                  <>
+                    <span className="mr-2">🧠</span>
+                    Explain This Block
+                  </>
+                )}
+              </button>
+            </div>
+          ) : (
+            <div className="text-sm text-gray-500 text-center py-4">
+              Select a block in the canvas to get an AI explanation
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Explanation Display */}
+      {explanation && (
+        <div className="card bg-green-50 border-green-200">
+          <h4 className="text-sm font-semibold text-green-700 mb-3 flex items-center">
+            <span className="mr-2">📖</span>
+            AI Explanation
+          </h4>
+          <div className="text-sm text-green-800 leading-relaxed">
+            {explanation}
+          </div>
+        </div>
+      )}
+
+      {/* Generated Flows History */}
+      {generatedFlows.length > 0 && (
+        <div className="card bg-purple-50 border-purple-200">
+          <h4 className="text-sm font-semibold text-purple-700 mb-3 flex items-center">
+            <span className="mr-2">📋</span>
+            Recent Generations
+          </h4>
+          <div className="space-y-2 max-h-32 overflow-y-auto">
+            {generatedFlows.slice(-3).reverse().map((flow) => (
+              <div key={flow.id} className="text-xs text-purple-600 bg-white p-2 rounded border">
+                <div className="font-medium">{flow.prompt}</div>
+                <div className="text-gray-500">{flow.timestamp} • {flow.nodes} nodes, {flow.edges} edges</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* AI Info */}
+      <div className="card bg-gray-50">
+        <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center">
+          <span className="mr-2">ℹ️</span>
+          About AI Features
+        </h4>
+        <div className="text-xs text-gray-600 space-y-1">
+          <div>• Text-to-flow generates complete game flows from descriptions</div>
+          <div>• Block explanations provide context and design insights</div>
+          <div>• AI suggestions help improve flow design and balance</div>
+          <div>• Generated flows follow validation rules and best practices</div>
+          <div>• Mock responses simulate realistic AI behavior</div>
+        </div>
+      </div>
+    </div>
+  )
+}

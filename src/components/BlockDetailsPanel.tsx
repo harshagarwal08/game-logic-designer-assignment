@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { Node } from 'reactflow'
 import { 
   StartBlockProperties, 
@@ -16,15 +16,7 @@ interface BlockDetailsPanelProps {
 }
 
 export default function BlockDetailsPanel({ selectedNode, onUpdateNode }: BlockDetailsPanelProps) {
-  const [properties, setProperties] = useState<Record<string, any>>({})
-
-  useEffect(() => {
-    if (selectedNode) {
-      setProperties(selectedNode.data?.properties || {})
-    } else {
-      setProperties({})
-    }
-  }, [selectedNode])
+  const [properties, setProperties] = useState<Record<string, any>>(() => selectedNode?.data?.properties || {})
 
   const handlePropertyChange = (key: string, value: any) => {
     const newProperties = { ...properties, [key]: value }

@@ -26,7 +26,7 @@ export default function ComputationPanel({ nodes, edges }: ComputationPanelProps
       </div>
 
       {/* Main Score */}
-      <div className="card bg-gradient-to-br from-blue-50 to-purple-50 border-2 border-blue-200">
+      <div className="card bg-gradient-to-br from-blue-50 to-purple-50 border-2 border-blue-200 text-gray-700">
         <div className="text-center">
           <div className="text-lg font-semibold text-gray-700 mb-2">
             Total Adventure Score
@@ -137,16 +137,16 @@ export default function ComputationPanel({ nodes, edges }: ComputationPanelProps
           <div className="flex justify-between items-center">
             <span className="text-sm text-gray-600">Balance Ratio:</span>
             <span className={`font-semibold ${
-              metrics.riskRewardRatio >= 1 ? 'text-green-600' : 
+              metrics.riskRewardRatio >= 1 ? 'text-green-600' :
               metrics.riskRewardRatio >= 0.5 ? 'text-yellow-600' : 'text-red-600'
             }`}>
               {metrics.riskRewardRatio.toFixed(2)}
             </span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-3">
-            <div 
+            <div
               className={`h-3 rounded-full transition-all duration-500 ${
-                metrics.riskRewardRatio >= 1 ? 'bg-gradient-to-r from-green-400 to-green-500' : 
+                metrics.riskRewardRatio >= 1 ? 'bg-gradient-to-r from-green-400 to-green-500' :
                 metrics.riskRewardRatio >= 0.5 ? 'bg-gradient-to-r from-yellow-400 to-yellow-500' : 'bg-gradient-to-r from-red-400 to-red-500'
               }`}
               style={{ width: `${Math.min(100, metrics.riskRewardRatio * 50)}%` }}
